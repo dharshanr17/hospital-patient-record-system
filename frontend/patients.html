@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global City Hospital - Patient Directory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="patients">
+
+    <div id="navbar-container"></div>
+
+    <main class="container-fluid px-4 py-4">
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1" id="patient-directory-heading">Central Patient Directory</h2>
+                <p class="text-muted small mb-0" id="patient-directory-sub">Search and view cross-hospital patient electronic health records.</p>
+            </div>
+            <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#registerPatientModal">
+                <i class="bi bi-person-plus-fill me-1"></i> Register New Patient
+            </button>
+        </div>
+
+        <!-- Doctor Privacy Queue Alert Banner -->
+        <div id="doctor-queue-banner" class="alert alert-primary border-primary-subtle d-none mb-3 py-2.5 px-3 small d-flex flex-wrap align-items-center justify-content-between gap-2 shadow-sm rounded-3">
+            <div class="d-flex align-items-center gap-2">
+                <div class="badge bg-primary text-white rounded-pill px-2.5 py-1.5"><i class="bi bi-person-badge-fill me-1"></i> Doctor View</div>
+                <span>Showing patients scheduled for your consultation (<strong id="doctor-queue-name">Dr. Emily Carter</strong>).</span>
+            </div>
+            <div class="text-primary-emphasis fw-semibold">
+                <i class="bi bi-search me-1"></i> Enter any <strong>UHID</strong> below to retrieve external records across all hospitals
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="card card-custom p-3 mb-4">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" id="patient-search-input" class="form-control" placeholder="Search by Patient UHID (e.g. UHID-2026-10001), Name, or Phone to retrieve any record...">
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2 px-1">
+                <small class="text-muted" style="font-size: 0.78rem;">
+                    <i class="bi bi-info-circle me-1"></i> Any doctor can retrieve records of any patient across all participating hospitals by searching their <strong>UHID</strong>.
+                </small>
+                <div id="search-filter-badge" class="badge bg-light text-secondary border"></div>
+            </div>
+        </div>
+
+        <!-- Patients Directory Table -->
+        <div class="card card-custom">
+            <div class="table-responsive p-3">
+                <table class="table table-custom align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>UHID</th>
+                            <th>Full Name</th>
+                            <th>Gender / DOB</th>
+                            <th>Phone</th>
+                            <th>Blood Group</th>
+                            <th>Allergies</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patients-tbody">
+                        <tr><td colspan="7" class="text-center text-muted py-4">Loading patient directory...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Register Patient Modal -->
+    <div class="modal fade" id="registerPatientModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-person-vcard text-primary me-2"></i>Register New Patient</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    
+                    <div id="patient-alert" class="alert alert-danger py-2 small d-none mb-3"></div>
+
+                    <form id="register-patient-form">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" id="fullName" class="form-control" placeholder="e.g. Alexander Pierce" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Date of Birth</label>
+                                <input type="date" id="dateOfBirth" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Gender</label>
+                                <select id="gender" class="form-select">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" id="phone" class="form-control" placeholder="e.g. 5551234567" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Email Address</label>
+                                <input type="email" id="email" class="form-control" placeholder="e.g. alexander@example.com">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Blood Group</label>
+                                <select id="bloodGroup" class="form-select">
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label small fw-semibold">Known Allergies</label>
+                                <input type="text" id="allergies" class="form-control" placeholder="e.g. Penicillin, Peanuts, None">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Residential Address</label>
+                                <textarea id="address" class="form-control" rows="2" placeholder="Full residential street address"></textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Emergency Contact Name</label>
+                                <input type="text" id="emergencyContactName" class="form-control" placeholder="Contact Person Name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Emergency Contact Phone</label>
+                                <input type="tel" id="emergencyContactPhone" class="form-control" placeholder="Contact Phone">
+                            </div>
+
+                            <input type="hidden" id="hospitalId" value="1">
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary-custom px-4">Complete Registration</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Patient Modal -->
+    <div class="modal fade" id="editPatientModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header border-0 pb-0">
+                    <div class="d-flex align-items-center justify-content-between w-100 me-2">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Patient Information</h5>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1.5" id="editPatientUhidBadge">UHID</span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    
+                    <div id="edit-patient-alert" class="alert alert-danger py-2 small d-none mb-3"></div>
+
+                    <form id="edit-patient-form">
+                        <input type="hidden" id="editPatientId">
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Full Name <span class="text-danger">*</span></label>
+                                <input type="text" id="editFullName" class="form-control" placeholder="Patient Full Name" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Date of Birth <span class="text-danger">*</span></label>
+                                <input type="date" id="editDateOfBirth" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold">Gender</label>
+                                <select id="editGender" class="form-select">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" id="editPhone" class="form-control" placeholder="e.g. 5551234567" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Email Address</label>
+                                <input type="email" id="editEmail" class="form-control" placeholder="e.g. patient@example.com">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Blood Group</label>
+                                <select id="editBloodGroup" class="form-select">
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label small fw-semibold">Known Allergies</label>
+                                <input type="text" id="editAllergies" class="form-control" placeholder="e.g. Penicillin, Peanuts, None">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Residential Address</label>
+                                <textarea id="editAddress" class="form-control" rows="2" placeholder="Full residential street address"></textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Emergency Contact Name</label>
+                                <input type="text" id="editEmergencyContactName" class="form-control" placeholder="Contact Person Name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Emergency Contact Phone</label>
+                                <input type="tel" id="editEmergencyContactPhone" class="form-control" placeholder="Contact Phone">
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary-custom px-4">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container-fluid px-4 text-center">
+            Hospital Patient Record System (HPRS) &copy; 2026. Centralized Cloud Healthcare Platform.
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/cloud-storage.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

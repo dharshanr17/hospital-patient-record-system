@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global City Hospital - Doctor Clinical Entry</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="visit">
+
+    <div id="navbar-container"></div>
+
+    <main class="container-fluid px-4 py-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">Doctor Clinical Entry & Prescription</h2>
+                <p class="text-muted small mb-0">Record vitals, clinical diagnosis, and prescribe medications.</p>
+            </div>
+        </div>
+
+        <form id="clinical-visit-form">
+            <div class="row g-4">
+                
+                <!-- Clinical Information Left Panel -->
+                <div class="col-lg-5">
+                    <div class="card card-custom p-4">
+                        <h5 class="fw-bold mb-3"><i class="bi bi-person-fill-check text-primary me-2"></i>Patient Selection</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Target Patient <span class="text-danger">*</span></label>
+                            <div class="input-group mb-2">
+                                <input type="text" id="visitUhidLookupInput" class="form-control form-control-sm" placeholder="Enter UHID (e.g. UHID-2026-10003)...">
+                                <button class="btn btn-sm btn-outline-primary" type="button" id="btn-visit-uhid-lookup">
+                                    <i class="bi bi-search me-1"></i> Retrieve UHID
+                                </button>
+                            </div>
+                            <div id="visit-uhid-lookup-feedback" class="small mb-1 d-none"></div>
+                            <select id="visitPatientId" class="form-select" required>
+                                <option value="">Loading patients...</option>
+                            </select>
+                            <small class="text-muted" style="font-size: 0.74rem;">Default lists your scheduled patients. Enter any UHID to retrieve external or cross-hospital patients.</small>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <h5 class="fw-bold mb-3"><i class="bi bi-heart-pulse text-danger me-2"></i>Patient Vitals & Symptoms</h5>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Vitals (BP, Pulse, Temp, Weight)</label>
+                            <input type="text" id="visitVitals" class="form-control" placeholder="e.g. BP: 120/80 mmHg, Pulse: 72 bpm, Temp: 98.6F, Weight: 70kg" value="BP: 125/82 mmHg, Pulse: 74 bpm, Temp: 98.4F">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Chief Symptoms & Complaints</label>
+                            <textarea id="visitSymptoms" class="form-control" rows="3" placeholder="Describe symptoms as reported by patient...">Mild headache and persistent fatigue for 3 days</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Doctor Clinical Diagnosis <span class="text-danger">*</span></label>
+                            <input type="text" id="visitDiagnosis" class="form-control" placeholder="Primary medical diagnosis" value="Mild Tension Headache & General Fatigue" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Doctor Notes / Instructions</label>
+                            <textarea id="visitNotes" class="form-control" rows="2" placeholder="Dietary restrictions, rest recommendations, etc.">Ensure proper hydration and 8 hours sleep.</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prescription Items Right Panel -->
+                <div class="col-lg-7">
+                    <div class="card card-custom p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-capsule-pill text-success me-2"></i>Prescribe Medications</h5>
+                            <button type="button" id="btn-add-rx-row" class="btn btn-outline-success btn-sm rounded-pill">
+                                <i class="bi bi-plus-lg me-1"></i> Add Medicine Row
+                            </button>
+                        </div>
+
+                        <div id="rx-rows-container">
+                            <!-- Default Prescription Row -->
+                            <div class="row g-2 rx-row align-items-center mb-2">
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control rx-name" placeholder="Medicine Name" value="Paracetamol" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control rx-dosage" placeholder="Dosage" value="500 mg">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control rx-freq" placeholder="Frequency" value="Twice daily">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control rx-dur" placeholder="Duration" value="5 Days">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control rx-inst" placeholder="Instructions" value="After food">
+                                </div>
+                                <div class="col-md-1 text-center">
+                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-circle" onclick="this.closest('.rx-row').remove()"><i class="bi bi-x"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top text-end">
+                            <button type="submit" class="btn btn-primary-custom px-5 py-2">
+                                <i class="bi bi-check-circle me-1"></i> Save Visit Record & Prescriptions
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+
+    </main>
+
+    <footer>
+        <div class="container-fluid px-4 text-center">
+            Hospital Patient Record System (HPRS) &copy; 2026. Centralized Cloud Healthcare Platform.
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/cloud-storage.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

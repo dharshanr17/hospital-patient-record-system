@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HPRS - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="dashboard">
+
+    <div id="navbar-container"></div>
+
+    <main class="container-fluid px-4 py-4">
+        
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">Platform Dashboard</h2>
+                <p class="text-muted small mb-0">Overview of centralized hospital patient records and operations.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="patients.html" class="btn btn-primary-custom"><i class="bi bi-person-plus me-1"></i> Register Patient</a>
+                <a href="appointments.html" class="btn btn-outline-primary rounded-pill fw-semibold"><i class="bi bi-calendar-plus me-1"></i> New Appointment</a>
+            </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card card-custom stat-card stat-blue">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small fw-semibold">Total Patients</div>
+                            <h2 class="mb-0 mt-1 fw-bold" id="stat-total-patients">0</h2>
+                        </div>
+                        <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card card-custom stat-card stat-emerald">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small fw-semibold">Appointments Today</div>
+                            <h2 class="mb-0 mt-1 fw-bold" id="stat-today-appointments">0</h2>
+                        </div>
+                        <div class="stat-icon"><i class="bi bi-calendar-check-fill"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card card-custom stat-card stat-purple">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small fw-semibold">Clinical Visits Logged</div>
+                            <h2 class="mb-0 mt-1 fw-bold" id="stat-total-visits">0</h2>
+                        </div>
+                        <div class="stat-icon"><i class="bi bi-journal-medical"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card card-custom stat-card stat-amber">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small fw-semibold">Active Doctors</div>
+                            <h2 class="mb-0 mt-1 fw-bold" id="stat-total-doctors">0</h2>
+                        </div>
+                        <div class="stat-icon"><i class="bi bi-person-badge-fill"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tables Row -->
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card card-custom h-100">
+                    <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-calendar-event me-2 text-primary"></i>Today's Appointments</h5>
+                        <a href="appointments.html" class="small text-primary fw-semibold text-decoration-none">View All</a>
+                    </div>
+                    <div class="table-responsive px-3 pb-3">
+                        <table class="table table-custom align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>UHID</th>
+                                    <th>Patient</th>
+                                    <th>Doctor</th>
+                                    <th>Schedule</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-appointments-tbody">
+                                <tr><td colspan="5" class="text-center text-muted py-3">Loading appointments...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card card-custom h-100">
+                    <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-clipboard2-pulse me-2 text-success"></i>Recent Clinical Visits</h5>
+                        <a href="patients.html" class="small text-primary fw-semibold text-decoration-none">Search History</a>
+                    </div>
+                    <div class="table-responsive px-3 pb-3">
+                        <table class="table table-custom align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>UHID</th>
+                                    <th>Patient</th>
+                                    <th>Doctor</th>
+                                    <th>Diagnosis</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-visits-tbody">
+                                <tr><td colspan="5" class="text-center text-muted py-3">Loading visit records...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="container-fluid px-4 text-center">
+            Hospital Patient Record System (HPRS) &copy; 2026. Centralized Cloud Healthcare Platform.
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/cloud-storage.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
