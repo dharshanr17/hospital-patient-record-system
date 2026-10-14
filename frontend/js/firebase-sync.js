@@ -26,12 +26,12 @@
 //    (replace all "YOUR_..." values)
 // ============================================================
 const HPRS_FIREBASE_CONFIG = {
-    apiKey:            "YOUR_API_KEY",
-    authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId:         "YOUR_PROJECT_ID",
-    storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId:             "YOUR_APP_ID"
+    apiKey:            "AIzaSyAn7MAfqKEZIFTqxZynbOaKT1UUxP23nOk",
+    authDomain:        "hprs-network.firebaseapp.com",
+    projectId:         "hprs-network",
+    storageBucket:     "hprs-network.firebasestorage.app",
+    messagingSenderId: "832305491998",
+    appId:             "1:832305491998:web:9a3a6bc7b0b2be976f3e0f"
 };
 // ============================================================
 
