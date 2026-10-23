@@ -189,6 +189,18 @@ const API = {
 
             if (method === 'POST') {
                 const patients = await FS.getCollection('patients');
+
+                // ── Cross-hospital UHID Sync: if UHID exists, update that record ──
+                if (body.uhid) {
+                    const byUhid = patients.find(p => p.uhid && p.uhid.toLowerCase() === body.uhid.toLowerCase());
+                    if (byUhid) {
+                        const merged = { ...byUhid, ...body, lastSyncedAt: new Date().toISOString() };
+                        await FS.setDocument('patients', String(byUhid.patientId), merged);
+                        return merged;
+                    }
+                }
+
+                // ── Standard duplicate check ──
                 const dup = patients.find(p =>
                     p.fullName.toLowerCase() === body.fullName.toLowerCase() && p.phone === body.phone
                 );
@@ -202,12 +214,16 @@ const API = {
             }
 
             if (method === 'PUT') {
-                const id = parseInt(endpoint.split('/')[2]);
+                const identifier = endpoint.split('/')[2];
+                const id = parseInt(identifier, 10);
                 const patients = await FS.getCollection('patients');
-                const existing = patients.find(p => p.patientId === id);
-                if (!existing) throw new Error('Patient not found: ' + id);
+                // Match by numeric ID OR UHID string
+                const existing = !isNaN(id)
+                    ? patients.find(p => p.patientId === id)
+                    : patients.find(p => p.uhid && p.uhid.toLowerCase() === identifier.toLowerCase());
+                if (!existing) throw new Error('Patient not found: ' + identifier);
                 const updated = { ...existing, ...body };
-                await FS.setDocument('patients', String(id), updated);
+                await FS.setDocument('patients', String(existing.patientId), updated);
                 return updated;
             }
         }
@@ -346,6 +362,31 @@ const API = {
                 return FS.getCollection('users');
             }
             if (endpoint.includes('/audit-logs')) return FS.getCollection('auditLogs') || [];
+        }
+
+        // ── Documents / Scans ─────────────────────────────────────────
+        if (endpoint.startsWith('/documents')) {
+            if (method === 'GET') {
+                const docs = await FS.getCollection('documents');
+                const qStr = endpoint.includes('?') ? endpoint.split('?')[1] : '';
+                const params = new URLSearchParams(qStr);
+                const uhidFilter = params.get('uhid');
+                const pidFilter  = params.get('patientId');
+                if (uhidFilter) return docs.filter(d => d.patientUhid && d.patientUhid.toLowerCase() === uhidFilter.toLowerCase());
+                if (pidFilter)  return docs.filter(d => String(d.patientId) === String(pidFilter));
+                return docs;
+            }
+            if (method === 'POST') {
+                const docId = 'doc_' + Date.now();
+                const newDoc = { documentId: docId, ...body, uploadedAt: new Date().toISOString() };
+                await FS.setDocument('documents', docId, newDoc);
+                return newDoc;
+            }
+            if (method === 'DELETE') {
+                const docId = endpoint.split('/')[2];
+                await FS.deleteDocument('documents', docId);
+                return { message: 'Document deleted' };
+            }
         }
 
         return [];
@@ -596,6 +637,33 @@ const API = {
                 return Promise.resolve(db.users);
             }
             if (endpoint.includes('/audit-logs')) return Promise.resolve(db.auditLogs);
+        }
+
+        // 7. Documents / Scans
+        if (endpoint.startsWith('/documents')) {
+            db.documents = db.documents || [];
+            if (method === 'GET') {
+                const qStr = endpoint.includes('?') ? endpoint.split('?')[1] : '';
+                const params = new URLSearchParams(qStr);
+                const uhidFilter = params.get('uhid');
+                const pidFilter  = params.get('patientId');
+                if (uhidFilter) return Promise.resolve(db.documents.filter(d => d.patientUhid && d.patientUhid.toLowerCase() === uhidFilter.toLowerCase()));
+                if (pidFilter)  return Promise.resolve(db.documents.filter(d => String(d.patientId) === String(pidFilter)));
+                return Promise.resolve(db.documents);
+            }
+            if (method === 'POST') {
+                const docId = 'doc_' + Date.now();
+                const newDoc = { documentId: docId, ...body, uploadedAt: new Date().toISOString() };
+                db.documents.push(newDoc);
+                CloudStorage.saveData(db);
+                return Promise.resolve(newDoc);
+            }
+            if (method === 'DELETE') {
+                const docId = endpoint.split('/')[2];
+                db.documents = db.documents.filter(d => d.documentId !== docId);
+                CloudStorage.saveData(db);
+                return Promise.resolve({ message: 'Document deleted' });
+            }
         }
 
         return Promise.resolve([]);

@@ -244,6 +244,14 @@ async function initPatientsPage() {
             }
         });
     }
+
+    // Real-time Firestore auto-sync for patients table across laptops
+    if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isReady) {
+        FirebaseSync.listenCollection('patients', () => {
+            const currentQ = searchInput ? searchInput.value : '';
+            loadPatients(currentQ);
+        });
+    }
 }
 
 async function loadPatients(query) {
@@ -365,11 +373,7 @@ async function initPatientProfilePage() {
 
         // Edit Patient Trigger from Profile Page
         const editBtn = document.getElementById('btn-edit-patient-profile');
-        if (editBtn) {
-            editBtn.onclick = () => {
-                openEditPatientModal(patientId);
-            };
-        }
+        if (editBtn) editBtn.onclick = () => openEditPatientModal(patientId);
 
         // Edit form submission on Profile Page
         const profileEditForm = document.getElementById('edit-patient-form');
@@ -400,7 +404,6 @@ async function initPatientProfilePage() {
                     const modal = bootstrap.Modal.getInstance(modalEl);
                     if (modal) modal.hide();
 
-                    // Update Profile Page UI
                     document.getElementById('profile-name').textContent = updated.fullName;
                     document.getElementById('profile-phone').textContent = updated.phone || 'N/A';
                     document.getElementById('profile-email').textContent = updated.email || 'N/A';
@@ -410,85 +413,238 @@ async function initPatientProfilePage() {
                     document.getElementById('profile-allergies').textContent = updated.allergies || 'None';
                     document.getElementById('profile-address').textContent = updated.address || 'N/A';
                     document.getElementById('profile-emergency').textContent = `${updated.emergencyContactName || 'N/A'} (${updated.emergencyContactPhone || 'N/A'})`;
-
                     alert(`Patient record for ${updated.fullName} (${updated.uhid}) updated successfully!`);
                 } catch (err) {
-                    if (alertBox) {
-                        alertBox.textContent = err.message;
-                        alertBox.classList.remove('d-none');
-                    } else {
-                        alert('Failed to update patient: ' + err.message);
-                    }
+                    if (alertBox) { alertBox.textContent = err.message; alertBox.classList.remove('d-none'); }
+                    else alert('Failed to update patient: ' + err.message);
                 }
             });
         }
 
         // PDF Download Trigger
         const downloadBtn = document.getElementById('btn-download-pdf');
-        if (downloadBtn) {
-            downloadBtn.onclick = () => {
-                downloadPatientReport(patientId);
-            };
-        }
+        if (downloadBtn) downloadBtn.onclick = () => downloadPatientReport(patientId);
 
-        // Load History
-        const visits = await API.get(`/patients/${patientId}/history`);
-        const historyContainer = document.getElementById('visit-history-container');
-        if (historyContainer) {
-            if (visits.length === 0) {
-                historyContainer.innerHTML = `<div class="text-center text-muted py-5">No clinical visits recorded for this patient.</div>`;
-            } else {
-                historyContainer.innerHTML = visits.map(v => `
-                    <div class="card card-custom mb-3">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="fw-bold text-dark me-2"><i class="bi bi-calendar3 me-1"></i> ${new Date(v.visitDate).toLocaleString()}</span>
-                                <span class="badge bg-secondary-subtle text-secondary">${v.hospitalName || 'Hospital'}</span>
-                            </div>
-                            <span class="text-muted small">Attending: Dr. ${v.doctorName}</span>
+        // ── Load Medical History (visits) ──────────────────────────────
+        async function renderHistory() {
+            const visits = await API.get(`/patients/${patientId}/history`);
+            const historyContainer = document.getElementById('visit-history-container');
+            if (!historyContainer) return;
+            if (!visits || visits.length === 0) {
+                historyContainer.innerHTML = `<div class="text-center text-muted py-5"><i class="bi bi-clipboard2-x fs-1 d-block mb-2"></i>No clinical visits recorded for this patient.</div>`;
+                return;
+            }
+            historyContainer.innerHTML = visits.map(v => `
+                <div class="card card-custom mb-3">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                        <div>
+                            <span class="fw-bold text-dark me-2"><i class="bi bi-calendar3 me-1"></i>${new Date(v.visitDate).toLocaleString()}</span>
+                            <span class="badge bg-secondary-subtle text-secondary">${v.hospitalName || 'Hospital'}</span>
                         </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="text-muted small fw-semibold">Vitals</div>
-                                    <div class="fw-semibold text-dark">${v.vitals || 'N/A'}</div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="text-muted small fw-semibold">Symptoms</div>
-                                    <div>${v.symptoms || 'N/A'}</div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="text-muted small fw-semibold">Diagnosis</div>
-                                    <div class="fw-bold text-primary">${v.diagnosis || 'N/A'}</div>
-                                </div>
-                            </div>
-                            ${v.prescriptions && v.prescriptions.length > 0 ? `
-                                <hr class="my-3">
-                                <div class="fw-bold small text-secondary mb-2"><i class="bi bi-capsule me-1"></i> Prescribed Medicines</div>
-                                <div class="table-responsive">
-                                    <table class="table table-sm align-middle mb-0" style="font-size: 0.85rem;">
-                                        <thead class="table-light">
-                                            <tr><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Instructions</th></tr>
-                                        </thead>
-                                        <tbody>
-                                            ${v.prescriptions.map(rx => `
-                                                <tr>
-                                                    <td class="fw-bold">${rx.medicineName}</td>
-                                                    <td>${rx.dosage || ''}</td>
-                                                    <td>${rx.frequency || ''}</td>
-                                                    <td>${rx.duration || ''}</td>
-                                                    <td class="text-muted">${rx.instructions || ''}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ` : ''}
-                        </div>
+                        <span class="text-muted small">Attending: ${v.doctorName}</span>
                     </div>
-                `).join('');
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="text-muted small fw-semibold">Vitals</div>
+                                <div class="fw-semibold text-dark">${v.vitals || 'N/A'}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-muted small fw-semibold">Symptoms</div>
+                                <div>${v.symptoms || 'N/A'}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-muted small fw-semibold">Diagnosis</div>
+                                <div class="fw-bold text-primary">${v.diagnosis || 'N/A'}</div>
+                            </div>
+                        </div>
+                        ${v.notes ? `<div class="mt-2 small text-muted"><i class="bi bi-journal-text me-1"></i>${v.notes}</div>` : ''}
+                        ${v.prescriptions && v.prescriptions.length > 0 ? `
+                            <hr class="my-3">
+                            <div class="fw-bold small text-secondary mb-2"><i class="bi bi-capsule me-1"></i> Prescribed Medicines</div>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0" style="font-size:0.85rem;">
+                                    <thead class="table-light"><tr><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Instructions</th></tr></thead>
+                                    <tbody>${v.prescriptions.map(rx => `
+                                        <tr>
+                                            <td class="fw-bold">${rx.medicineName}</td>
+                                            <td>${rx.dosage || ''}</td>
+                                            <td>${rx.frequency || ''}</td>
+                                            <td>${rx.duration || ''}</td>
+                                            <td class="text-muted">${rx.instructions || ''}</td>
+                                        </tr>`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        await renderHistory();
+
+        // ── Load Patient Documents ─────────────────────────────────────
+        async function loadPatientDocuments() {
+            const container = document.getElementById('patient-documents-container');
+            const countBadge = document.getElementById('docs-count-badge');
+            if (!container) return;
+
+            try {
+                const docs = await API.get(`/documents?patientId=${patientId}`);
+                if (countBadge) countBadge.textContent = docs.length || '';
+
+                if (!docs || docs.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-5">
+                            <div class="doc-upload-dropzone mx-auto" style="max-width:380px; cursor:default;">
+                                <i class="bi bi-file-earmark-medical"></i>
+                                <div class="fw-semibold text-muted">No documents uploaded yet</div>
+                                <div class="small text-muted mt-1">Click <strong>Upload Scan / PDF</strong> above to attach X-Rays, MRIs, lab reports, and clinical PDFs to this patient's record.</div>
+                            </div>
+                        </div>`;
+                    return;
+                }
+
+                container.innerHTML = docs.map(doc => {
+                    const catIcons = { 'X-Ray': 'doc-icon-xray', 'MRI': 'doc-icon-scan', 'CT Scan': 'doc-icon-scan', 'ECG': 'doc-icon-lab', 'Lab Report': 'doc-icon-lab' };
+                    const iconClass = catIcons[doc.category] || 'doc-icon-pdf';
+                    const catEmoji = { 'X-Ray': 'bi-radioactive', 'MRI': 'bi-layers', 'CT Scan': 'bi-cpu', 'ECG': 'bi-activity', 'Lab Report': 'bi-flask' };
+                    const iconName = catEmoji[doc.category] || 'bi-file-earmark-pdf';
+                    const hasFile = !!doc.fileDataUrl;
+                    return `
+                        <div class="document-card mb-3">
+                            <div class="doc-icon-box ${iconClass}">
+                                <i class="bi ${iconName}"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="fw-bold">${doc.title || 'Untitled Document'}</div>
+                                        <div class="text-muted small">${doc.category || 'Document'} &middot; Uploaded by ${doc.uploadedBy || 'Doctor'} &middot; ${doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : ''}</div>
+                                        ${doc.notes ? `<div class="text-muted small mt-1"><i class="bi bi-chat-text me-1"></i>${doc.notes}</div>` : ''}
+                                    </div>
+                                    <div class="d-flex gap-1 ms-2">
+                                        ${hasFile ? `<button class="btn btn-outline-primary btn-sm rounded-pill" onclick="viewPatientDocument('${doc.documentId}')"><i class="bi bi-eye me-1"></i>View</button>` : '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Placeholder</span>'}
+                                        <button class="btn btn-outline-danger btn-sm rounded-circle" onclick="deletePatientDocument('${doc.documentId}')" title="Delete"><i class="bi bi-trash3"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('');
+                window._profileDocuments = docs;
+            } catch (err) {
+                container.innerHTML = `<div class="text-danger small p-3">Failed to load documents: ${err.message}</div>`;
             }
         }
+        await loadPatientDocuments();
+
+        // ── View document globally ─────────────────────────────────────
+        window.viewPatientDocument = function(docId) {
+            const docs = window._profileDocuments || [];
+            const doc = docs.find(d => d.documentId === docId);
+            if (!doc || !doc.fileDataUrl) { alert('File not available for preview.'); return; }
+
+            document.getElementById('view-doc-title').textContent = doc.title || 'Document';
+            document.getElementById('view-doc-meta').textContent = `${doc.category} · ${doc.uploadedBy} · ${doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : ''}`;
+
+            const contentDiv = document.getElementById('view-doc-content');
+            if (doc.fileType && doc.fileType.startsWith('image/')) {
+                contentDiv.innerHTML = `<img src="${doc.fileDataUrl}" class="img-fluid w-100" style="object-fit:contain; max-height:75vh;" alt="${doc.title}">`;
+            } else {
+                contentDiv.innerHTML = `<iframe src="${doc.fileDataUrl}" class="w-100 border-0" style="height:75vh;"></iframe>`;
+            }
+
+            const dlBtn = document.getElementById('view-doc-download-btn');
+            if (dlBtn) {
+                dlBtn.onclick = () => {
+                    const a = document.createElement('a');
+                    a.href = doc.fileDataUrl;
+                    a.download = doc.title || 'document';
+                    a.click();
+                };
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('viewDocumentModal'));
+            modal.show();
+        };
+
+        // ── Delete document globally ───────────────────────────────────
+        window.deletePatientDocument = async function(docId) {
+            if (!confirm('Delete this document? This cannot be undone.')) return;
+            try {
+                await API.delete(`/documents/${docId}`);
+                await loadPatientDocuments();
+            } catch (err) { alert('Failed to delete document: ' + err.message); }
+        };
+
+        // ── Upload Document Form ───────────────────────────────────────
+        const uploadForm = document.getElementById('upload-document-form');
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const alertBox = document.getElementById('upload-doc-alert');
+                if (alertBox) alertBox.classList.add('d-none');
+
+                const fileInput = document.getElementById('docFile');
+                const file = fileInput && fileInput.files[0];
+                if (!file) {
+                    if (alertBox) { alertBox.textContent = 'Please select a file to upload.'; alertBox.classList.remove('d-none'); }
+                    return;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    if (alertBox) { alertBox.textContent = 'File size exceeds 5 MB limit. Please compress the file first.'; alertBox.classList.remove('d-none'); }
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = async (evt) => {
+                    try {
+                        const payload = {
+                            patientId: parseInt(patientId),
+                            patientUhid: patient.uhid,
+                            category: document.getElementById('docCategory').value,
+                            title: document.getElementById('docTitle').value.trim(),
+                            notes: document.getElementById('docNotes').value.trim(),
+                            uploadedBy: localStorage.getItem('hprs_user_name') || 'Doctor',
+                            fileDataUrl: evt.target.result,
+                            fileType: file.type,
+                            fileName: file.name
+                        };
+                        await API.post('/documents', payload);
+                        const modalEl = document.getElementById('uploadDocumentModal');
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                        uploadForm.reset();
+                        document.getElementById('dropzone-label').textContent = 'Click to browse or drag & drop';
+                        document.getElementById('dropzone-label').classList.remove('text-primary');
+                        await loadPatientDocuments();
+                        // Switch to docs tab to show the uploaded file
+                        if (typeof switchTab === 'function') switchTab('docs');
+                    } catch (err) {
+                        if (alertBox) { alertBox.textContent = 'Upload failed: ' + err.message; alertBox.classList.remove('d-none'); }
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ── Real-time Firestore listeners (auto-refresh) ───────────────
+        if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isReady) {
+            FirebaseSync.listenCollection('visits', async () => await renderHistory());
+            FirebaseSync.listenCollection('documents', async () => await loadPatientDocuments());
+            FirebaseSync.listenCollection('patients', (docs) => {
+                const updated = docs.find(p => String(p.patientId) === String(patientId));
+                if (updated) {
+                    window.currentProfilePatient = updated;
+                    document.getElementById('profile-name').textContent = updated.fullName;
+                    document.getElementById('profile-uhid').textContent = updated.uhid;
+                    document.getElementById('profile-phone').textContent = updated.phone || 'N/A';
+                    document.getElementById('profile-allergies').textContent = updated.allergies || 'None';
+                    document.getElementById('profile-blood').textContent = updated.bloodGroup || 'N/A';
+                }
+            });
+        }
+
     } catch (err) {
         console.error('Failed to load patient profile:', err);
     }
@@ -733,7 +889,42 @@ function initVisitPage() {
             };
 
             try {
-                await API.post('/visits', payload);
+                const savedVisit = await API.post('/visits', payload);
+
+                // Check if optional scan/PDF file was attached
+                const scanFileInput = document.getElementById('visitScanFile');
+                const scanFile = scanFileInput && scanFileInput.files[0];
+                if (scanFile) {
+                    if (scanFile.size <= 5 * 1024 * 1024) {
+                        await new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onload = async (evt) => {
+                                try {
+                                    const customTitle = document.getElementById('visitScanTitle')?.value?.trim();
+                                    await API.post('/documents', {
+                                        patientId: payload.patientId,
+                                        patientUhid: savedVisit.patientUhid || 'UHID-000',
+                                        category: 'Clinical Scan',
+                                        title: customTitle || (scanFile.name.replace(/\.[^/.]+$/, '') + ' — Clinical Visit'),
+                                        notes: `Attached during Clinical Visit on ${new Date().toLocaleDateString()}`,
+                                        uploadedBy: localStorage.getItem('hprs_user_name') || 'Doctor',
+                                        fileDataUrl: evt.target.result,
+                                        fileType: scanFile.type,
+                                        fileName: scanFile.name
+                                    });
+                                } catch (uploadErr) {
+                                    console.error('Failed to attach scan:', uploadErr);
+                                }
+                                resolve();
+                            };
+                            reader.onerror = () => resolve();
+                            reader.readAsDataURL(scanFile);
+                        });
+                    } else {
+                        alert('Visit saved, but attached file exceeded 5 MB and was not uploaded.');
+                    }
+                }
+
                 alert('Clinical visit record & prescriptions saved successfully!');
                 window.location.href = `patient-profile.html?id=${payload.patientId}`;
             } catch (err) {

@@ -255,3 +255,133 @@ footer {
     color: var(--text-muted);
     font-size: 0.85rem;
 }
+
+/* ============================================================
+   HPRS v3 — Hospital Logo Badges (GCH blue / MCH green)
+   ============================================================ */
+
+.navbar-brand-logo-gch {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+    color: white;
+    border-radius: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    box-shadow: 0 4px 12px rgba(29, 78, 216, 0.35);
+    flex-shrink: 0;
+}
+
+.navbar-brand-logo-mch {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #047857, #14b8a6);
+    color: white;
+    border-radius: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.35);
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   HPRS v3 — Document / Scan Upload Cards
+   ============================================================ */
+
+.document-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+}
+
+.document-card:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.09);
+    transform: translateY(-1px);
+}
+
+.doc-icon-box {
+    width: 46px;
+    height: 46px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+}
+
+.doc-icon-pdf  { background: #fee2e2; color: #b91c1c; }
+.doc-icon-scan { background: #e0f2fe; color: #0369a1; }
+.doc-icon-lab  { background: #d1fae5; color: #047857; }
+.doc-icon-xray { background: #f3e8ff; color: #6b21a8; }
+
+.doc-upload-dropzone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 14px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #f8fafc;
+}
+
+.doc-upload-dropzone:hover,
+.doc-upload-dropzone.drag-over {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.doc-upload-dropzone i {
+    font-size: 2rem;
+    color: #94a3b8;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.doc-upload-dropzone:hover i {
+    color: var(--primary);
+}
+
+/* ============================================================
+   HPRS v3 — UHID Badge & Tab Styles
+   ============================================================ */
+
+.badge-uhid {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    font-family: 'Outfit', monospace;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.3em 0.75em;
+    border-radius: 8px;
+    letter-spacing: 0.03em;
+}
+
+.profile-tab-nav .nav-link {
+    border-radius: 10px 10px 0 0;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #64748b;
+    padding: 0.6rem 1.2rem;
+    border: 1px solid transparent;
+}
+
+.profile-tab-nav .nav-link.active {
+    color: var(--primary);
+    background: white;
+    border-color: #e2e8f0 #e2e8f0 white;
+}

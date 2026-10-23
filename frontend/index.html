@@ -55,6 +55,45 @@
             letter-spacing: 0.08em;
             margin-bottom: 6px;
         }
+        /* Hospital Logo container above HPRS Network */
+        #hospital-logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            min-height: 48px;
+            transition: all 0.3s ease;
+        }
+        .hosp-logo-icon {
+            width: 48px; height: 48px;
+            border-radius: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.5px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+            flex-shrink: 0;
+        }
+        .hosp-logo-icon.gch { background: linear-gradient(135deg, #1d4ed8, #0ea5e9); }
+        .hosp-logo-icon.mch { background: linear-gradient(135deg, #047857, #14b8a6); }
+        .hosp-logo-text { text-align: left; }
+        .hosp-logo-text .hosp-name { font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.95); line-height: 1.1; }
+        .hosp-logo-text .hosp-tag  { font-size: 0.67rem; color: rgba(255,255,255,0.45); }
+        /* Hospital dropdown */
+        #hospital-select {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            padding: 8px 12px;
+        }
+        #hospital-select option { background: #1e293b; color: white; }
+        #hospital-select:focus { box-shadow: 0 0 0 3px rgba(37,99,235,0.35); border-color: #3b82f6; outline: none; }
     </style>
 </head>
 <body data-page="login">
@@ -62,10 +101,13 @@
     <div class="login-container">
         <div class="login-glass-card text-center">
 
-            <!-- Logo -->
-            <div class="d-inline-flex align-items-center justify-content-center mb-3"
-                 style="width: 58px; height: 58px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 16px; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);">
-                <i class="bi bi-hospital text-white fs-2"></i>
+            <!-- Dynamic Hospital Logo (above HPRS Network) -->
+            <div id="hospital-logo-container">
+                <div class="hosp-logo-icon gch" id="hospital-logo-icon">GCH</div>
+                <div class="hosp-logo-text">
+                    <div class="hosp-name" id="hospital-indicator-name">Global City Hospital</div>
+                    <div class="hosp-tag">HPRS Partner Institution</div>
+                </div>
             </div>
 
             <h3 class="brand-font text-white mb-1">HPRS Network</h3>
@@ -80,48 +122,90 @@
 
             <div id="login-alert" class="alert alert-danger py-2 small d-none" role="alert"></div>
 
-            <!-- Quick-Select Presets -->
+            <!-- Hospital Dropdown -->
             <div class="mb-3 text-start">
-                <div class="preset-section-label"><i class="bi bi-building me-1"></i>Hospital 1 — Global City Hospital</div>
-                <div class="row g-1 mb-2">
+                <label class="form-label text-white-50 small"><i class="bi bi-building me-1"></i>Select Hospital</label>
+                <select id="hospital-select" class="form-select" onchange="onHospitalChange(this.value)">
+                    <option value="gch">🏥 Global City Hospital (GCH)</option>
+                    <option value="mch">🏥 Municipal City Hospital (MCH)</option>
+                </select>
+            </div>
+
+            <!-- GCH Quick-Select Presets -->
+            <div id="presets-gch" class="mb-3 text-start">
+                <div class="preset-section-label"><i class="bi bi-person-lines-fill me-1"></i>GCH — Quick Login</div>
+                <div class="row g-1 mb-1">
                     <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('admin@hprs.com')">
-                            <i class="bi bi-shield-check me-1"></i>Admin
+                        <button class="preset-btn" onclick="setPreset('gch.admin@hprs.com')">
+                            <i class="bi bi-shield-check me-1"></i>GCH Admin
                             <span class="role-badge badge-admin">ADMIN</span>
                         </button>
                     </div>
                     <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('doctor@hprs.com')">
-                            <i class="bi bi-person-badge me-1"></i>Doctor
+                        <button class="preset-btn" onclick="setPreset('gch.dr.carter@hprs.com')">
+                            <i class="bi bi-person-badge me-1"></i>Dr. Carter
                             <span class="role-badge badge-doctor">DR</span>
                         </button>
                     </div>
                     <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('receptionist@hprs.com')">
+                        <button class="preset-btn" onclick="setPreset('gch.dr.sharma@hprs.com')">
+                            <i class="bi bi-person-badge me-1"></i>Dr. Sharma
+                            <span class="role-badge badge-doctor">DR</span>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="preset-btn" onclick="setPreset('gch.nurse.sarah@hprs.com')">
+                            <i class="bi bi-heart-pulse me-1"></i>Nurse Sarah
+                            <span class="role-badge badge-nurse">RN</span>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="preset-btn" onclick="setPreset('gch.nurse.david@hprs.com')">
+                            <i class="bi bi-heart-pulse me-1"></i>Nurse David
+                            <span class="role-badge badge-nurse">RN</span>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="preset-btn" onclick="setPreset('gch.reception@hprs.com')">
                             <i class="bi bi-person-workspace me-1"></i>Reception
                             <span class="role-badge badge-recept">REC</span>
                         </button>
                     </div>
-                    <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('nurse@hprs.com')">
-                            <i class="bi bi-heart-pulse me-1"></i>Nurse
-                            <span class="role-badge badge-nurse">RN</span>
-                        </button>
-                    </div>
                 </div>
+            </div>
 
-                <div class="preset-section-label"><i class="bi bi-building me-1"></i>Hospital 2 — Metro Multi-Specialty</div>
-                <div class="row g-1">
+            <!-- MCH Quick-Select Presets (hidden by default) -->
+            <div id="presets-mch" class="mb-3 text-start d-none">
+                <div class="preset-section-label"><i class="bi bi-person-lines-fill me-1"></i>MCH — Quick Login</div>
+                <div class="row g-1 mb-1">
                     <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('metro.admin@hprs.com')">
-                            <i class="bi bi-shield-check me-1"></i>Admin
+                        <button class="preset-btn" onclick="setPreset('mch.admin@hprs.com')">
+                            <i class="bi bi-shield-check me-1"></i>MCH Admin
                             <span class="role-badge badge-admin">ADMIN</span>
                         </button>
                     </div>
                     <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('dr.rivera@hprs.com')">
-                            <i class="bi bi-person-badge me-1"></i>Doctor
+                        <button class="preset-btn" onclick="setPreset('mch.dr.rivera@hprs.com')">
+                            <i class="bi bi-person-badge me-1"></i>Dr. Rivera
                             <span class="role-badge badge-doctor">DR</span>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="preset-btn" onclick="setPreset('mch.dr.patel@hprs.com')">
+                            <i class="bi bi-person-badge me-1"></i>Dr. Patel
+                            <span class="role-badge badge-doctor">DR</span>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="preset-btn" onclick="setPreset('mch.nurse.priya@hprs.com')">
+                            <i class="bi bi-heart-pulse me-1"></i>Nurse Priya
+                            <span class="role-badge badge-nurse">RN</span>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="preset-btn" onclick="setPreset('mch.reception@hprs.com')">
+                            <i class="bi bi-person-workspace me-1"></i>Reception
+                            <span class="role-badge badge-recept">REC</span>
                         </button>
                     </div>
                 </div>
@@ -135,7 +219,7 @@
                     <label class="form-label text-white-50 small">Username / Email</label>
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-secondary text-white-50"><i class="bi bi-envelope"></i></span>
-                        <input type="email" id="email" class="form-control bg-transparent text-white border-secondary" placeholder="e.g. doctor@hprs.com" value="admin@hprs.com" required>
+                        <input type="email" id="email" class="form-control bg-transparent text-white border-secondary" placeholder="e.g. gch.dr.carter@hprs.com" value="gch.dr.carter@hprs.com" required>
                     </div>
                 </div>
 
@@ -171,6 +255,30 @@
             document.getElementById('email').value = email;
             document.getElementById('password').value = 'Password123!';
             document.getElementById('email').focus();
+        }
+
+        // Hospital dropdown handler — swaps logo + presets
+        function onHospitalChange(val) {
+            const logoIcon = document.getElementById('hospital-logo-icon');
+            const logoName = document.getElementById('hospital-indicator-name');
+            const gchPresets = document.getElementById('presets-gch');
+            const mchPresets = document.getElementById('presets-mch');
+
+            if (val === 'mch') {
+                logoIcon.className = 'hosp-logo-icon mch';
+                logoIcon.textContent = 'MCH';
+                logoName.textContent = 'Municipal City Hospital';
+                gchPresets.classList.add('d-none');
+                mchPresets.classList.remove('d-none');
+                setPreset('mch.admin@hprs.com');
+            } else {
+                logoIcon.className = 'hosp-logo-icon gch';
+                logoIcon.textContent = 'GCH';
+                logoName.textContent = 'Global City Hospital';
+                gchPresets.classList.remove('d-none');
+                mchPresets.classList.add('d-none');
+                setPreset('gch.dr.carter@hprs.com');
+            }
         }
 
         // Show cloud sync status badge after scripts initialise
