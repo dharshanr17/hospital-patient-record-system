@@ -725,9 +725,34 @@ async function loadAppointments(filterQuery = '') {
 
     try {
         let appts = await API.get('/appointments');
+
+        // Count auto-no-shows (appointments marked NO_SHOW by the system)
+        const autoNoShows = appts.filter(a => a.status === 'NO_SHOW' && a.autoMarkedAt);
+
+        // Show/update auto-no-show info banner
+        let noShowBanner = document.getElementById('auto-noshow-banner');
+        if (autoNoShows.length > 0) {
+            if (!noShowBanner) {
+                noShowBanner = document.createElement('div');
+                noShowBanner.id = 'auto-noshow-banner';
+                noShowBanner.className = 'alert alert-warning alert-dismissible d-flex align-items-center gap-2 py-2 px-3 mb-3';
+                noShowBanner.setAttribute('role', 'alert');
+                tbody.closest('table')?.parentElement?.insertBefore(noShowBanner, tbody.closest('table'));
+            }
+            noShowBanner.innerHTML = `
+                <i class="bi bi-clock-history fs-5 text-warning"></i>
+                <div class="small">
+                    <strong>${autoNoShows.length} appointment${autoNoShows.length > 1 ? 's were' : ' was'} automatically marked as <span class="text-danger">No-Show</span></strong>
+                    &mdash; patient${autoNoShows.length > 1 ? 's' : ''} did not arrive at the scheduled time.
+                </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>`;
+        } else if (noShowBanner) {
+            noShowBanner.remove();
+        }
+
         if (filterQuery && filterQuery.trim().length > 0) {
             const q = filterQuery.trim().toLowerCase();
-            appts = appts.filter(a => 
+            appts = appts.filter(a =>
                 (a.patientUhid && a.patientUhid.toLowerCase().includes(q)) ||
                 (a.patientName && a.patientName.toLowerCase().includes(q)) ||
                 (a.doctorName && a.doctorName.toLowerCase().includes(q)) ||
@@ -741,31 +766,39 @@ async function loadAppointments(filterQuery = '') {
             return;
         }
 
-        tbody.innerHTML = appts.map(a => `
-            <tr>
-                <td><span class="fw-semibold text-primary">${a.patientUhid || 'N/A'}</span></td>
-                <td class="fw-bold">${a.patientName}</td>
-                <td>Dr. ${a.doctorName}</td>
-                <td>${new Date(a.appointmentDatetime).toLocaleString()}</td>
-                <td><small class="text-muted">${a.reason || 'General Consultation'}</small></td>
-                <td>
-                    <div class="dropdown">
-                        <button class="btn btn-sm badge-status badge-${(a.status || 'scheduled').toLowerCase()} dropdown-toggle border-0" data-bs-toggle="dropdown">
+        const isTerminal = s => ['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(s);
+
+        tbody.innerHTML = appts.map(a => {
+            const statusLower = (a.status || 'scheduled').toLowerCase().replace('_', '-');
+            const autoLabel = a.autoMarkedAt ? ' <span title="Auto-marked by system" style="font-size:0.65rem;opacity:0.7;">⏱ auto</span>' : '';
+            const rowClass = a.status === 'NO_SHOW' ? 'table-warning' : (a.status === 'CANCELLED' ? 'table-secondary' : '');
+            const actions = isTerminal(a.status)
+                ? `<span class="badge badge-status badge-${statusLower}">${a.status.replace('_', '-')}${autoLabel}</span>`
+                : `<div class="dropdown">
+                        <button class="btn btn-sm badge-status badge-${statusLower} dropdown-toggle border-0" data-bs-toggle="dropdown">
                             ${a.status}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="#" onclick="updateApptStatus(${a.appointmentId}, 'COMPLETED')">Mark Completed</a></li>
                             <li><a class="dropdown-item" href="#" onclick="updateApptStatus(${a.appointmentId}, 'CANCELLED')">Cancel Appointment</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="updateApptStatus(${a.appointmentId}, 'NO_SHOW')">Mark No-Show</a></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="updateApptStatus(${a.appointmentId}, 'NO_SHOW')">Mark No-Show</a></li>
                         </ul>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
+                    </div>`;
+            return `
+            <tr class="${rowClass}">
+                <td><span class="fw-semibold text-primary">${a.patientUhid || 'N/A'}</span></td>
+                <td class="fw-bold">${a.patientName}</td>
+                <td>Dr. ${a.doctorName}</td>
+                <td>${new Date(a.appointmentDatetime).toLocaleString()}</td>
+                <td><small class="text-muted">${a.reason || 'General Consultation'}</small></td>
+                <td>${actions}</td>
+            </tr>`;
+        }).join('');
     } catch (err) {
         tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Error loading appointments: ${err.message}</td></tr>`;
     }
 }
+
 
 /* -------------------------------------------------------------
  * 6. Doctor Visit / Clinical Entry Page

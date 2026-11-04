@@ -235,6 +235,16 @@ const API = {
 
             if (method === 'GET') {
                 const appts = await FS.getCollection('appointments');
+                const now = new Date();
+                // Auto-sweep: mark overdue SCHEDULED appointments as NO_SHOW
+                const sweepPromises = appts
+                    .filter(a => a.status === 'SCHEDULED' && new Date(a.appointmentDatetime) < now)
+                    .map(a => {
+                        a.status = 'NO_SHOW';
+                        a.autoMarkedAt = now.toISOString();
+                        return FS.setDocument('appointments', String(a.appointmentId), a);
+                    });
+                if (sweepPromises.length > 0) await Promise.all(sweepPromises);
                 if (userRole === 'DOCTOR' && userId) {
                     return appts.filter(a => a.doctorId == userId);
                 }
@@ -530,6 +540,16 @@ const API = {
             const userRole = localStorage.getItem('hprs_role');
             const userId   = parseInt(localStorage.getItem('hprs_user_id'));
             if (method === 'GET') {
+                const now = new Date();
+                let changed = false;
+                db.appointments.forEach(a => {
+                    if (a.status === 'SCHEDULED' && new Date(a.appointmentDatetime) < now) {
+                        a.status = 'NO_SHOW';
+                        a.autoMarkedAt = now.toISOString();
+                        changed = true;
+                    }
+                });
+                if (changed) CloudStorage.saveData(db);
                 let list = db.appointments;
                 if (userRole === 'DOCTOR' && userId) list = list.filter(a => a.doctorId == userId);
                 return Promise.resolve(list);
