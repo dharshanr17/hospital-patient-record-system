@@ -188,6 +188,8 @@ const API = {
             }
 
             if (method === 'POST') {
+                const callerRole = localStorage.getItem('hprs_role');
+                if (callerRole === 'NURSE') throw new Error('Access Denied: Nurses cannot register new patients.');
                 const patients = await FS.getCollection('patients');
 
                 // ── Cross-hospital UHID Sync: if UHID exists, update that record ──
@@ -252,6 +254,8 @@ const API = {
             }
 
             if (method === 'POST') {
+                const callerRole = localStorage.getItem('hprs_role');
+                if (callerRole === 'NURSE') throw new Error('Access Denied: Nurses cannot create appointments.');
                 const [patients, users, appts] = await Promise.all([
                     FS.getCollection('patients'),
                     FS.getCollection('users'),
@@ -510,6 +514,8 @@ const API = {
             }
 
             if (method === 'POST') {
+                const callerRole = localStorage.getItem('hprs_role');
+                if (callerRole === 'NURSE') throw new Error('Access Denied: Nurses cannot register new patients.');
                 const dup = db.patients.find(p =>
                     p.fullName.toLowerCase() === body.fullName.toLowerCase() && p.phone === body.phone
                 );
@@ -555,6 +561,8 @@ const API = {
                 return Promise.resolve(list);
             }
             if (method === 'POST') {
+                const callerRole = localStorage.getItem('hprs_role');
+                if (callerRole === 'NURSE') throw new Error('Access Denied: Nurses cannot create appointments.');
                 const conflict = db.appointments.find(a =>
                     a.doctorId == body.doctorId &&
                     a.appointmentDatetime === body.appointmentDatetime &&

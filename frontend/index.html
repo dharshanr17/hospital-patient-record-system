@@ -8,35 +8,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        .preset-btn {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.18);
-            color: rgba(255,255,255,0.85);
-            font-size: 0.75rem;
-            border-radius: 8px;
-            padding: 6px 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: left;
-            width: 100%;
-        }
-        .preset-btn:hover {
-            background: rgba(255,255,255,0.18);
-            border-color: rgba(255,255,255,0.4);
-            color: #fff;
-        }
-        .preset-btn .role-badge {
-            display: inline-block;
-            font-size: 0.65rem;
-            padding: 1px 6px;
-            border-radius: 20px;
-            margin-left: 4px;
-            font-weight: 600;
-        }
-        .badge-admin   { background: rgba(234, 179, 8,  0.25); color: #fde68a; }
-        .badge-doctor  { background: rgba(59,  130, 246, 0.25); color: #93c5fd; }
-        .badge-recept  { background: rgba(16,  185, 129, 0.25); color: #6ee7b7; }
-        .badge-nurse   { background: rgba(168, 85,  247, 0.25); color: #d8b4fe; }
         .sync-badge {
             font-size: 0.7rem;
             padding: 3px 10px;
@@ -48,13 +19,6 @@
         .sync-badge.live   { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.35); }
         .sync-badge.local  { background: rgba(245,158,11,0.2); color: #fcd34d; border: 1px solid rgba(245,158,11,0.35); }
         .sync-badge.check  { background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
-        .preset-section-label {
-            font-size: 0.68rem;
-            color: rgba(255,255,255,0.4);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 6px;
-        }
         /* Hospital Logo container above HPRS Network */
         #hospital-logo-container {
             display: flex;
@@ -83,17 +47,8 @@
         .hosp-logo-text { text-align: left; }
         .hosp-logo-text .hosp-name { font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.95); line-height: 1.1; }
         .hosp-logo-text .hosp-tag  { font-size: 0.67rem; color: rgba(255,255,255,0.45); }
-        /* Hospital dropdown */
-        #hospital-select {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: white;
-            border-radius: 10px;
-            font-size: 0.85rem;
-            padding: 8px 12px;
-        }
-        #hospital-select option { background: #1e293b; color: white; }
-        #hospital-select:focus { box-shadow: 0 0 0 3px rgba(37,99,235,0.35); border-color: #3b82f6; outline: none; }
+        /* Hospital dropdown search wrapper */
+        .hospital-search-wrapper input::placeholder { color: rgba(255,255,255,0.45); }
     </style>
 </head>
 <body data-page="login">
@@ -122,104 +77,37 @@
 
             <div id="login-alert" class="alert alert-danger py-2 small d-none" role="alert"></div>
 
-            <!-- Hospital Dropdown -->
+            <!-- Hospital Dropdown with Search -->
             <div class="mb-3 text-start">
                 <label class="form-label text-white-50 small"><i class="bi bi-building me-1"></i>Select Hospital</label>
-                <select id="hospital-select" class="form-select" onchange="onHospitalChange(this.value)">
-                    <option value="gch">🏥 Global City Hospital (GCH)</option>
-                    <option value="mch">🏥 Municipal City Hospital (MCH)</option>
-                </select>
-            </div>
-
-            <!-- GCH Quick-Select Presets -->
-            <div id="presets-gch" class="mb-3 text-start">
-                <div class="preset-section-label"><i class="bi bi-person-lines-fill me-1"></i>GCH — Quick Login</div>
-                <div class="row g-1 mb-1">
-                    <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('gch.admin@hprs.com')">
-                            <i class="bi bi-shield-check me-1"></i>GCH Admin
-                            <span class="role-badge badge-admin">ADMIN</span>
-                        </button>
-                    </div>
-                    <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('gch.dr.carter@hprs.com')">
-                            <i class="bi bi-person-badge me-1"></i>Dr. Carter
-                            <span class="role-badge badge-doctor">DR</span>
-                        </button>
-                    </div>
-                    <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('gch.dr.sharma@hprs.com')">
-                            <i class="bi bi-person-badge me-1"></i>Dr. Sharma
-                            <span class="role-badge badge-doctor">DR</span>
-                        </button>
-                    </div>
-                    <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('gch.nurse.sarah@hprs.com')">
-                            <i class="bi bi-heart-pulse me-1"></i>Nurse Sarah
-                            <span class="role-badge badge-nurse">RN</span>
-                        </button>
-                    </div>
-                    <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('gch.nurse.david@hprs.com')">
-                            <i class="bi bi-heart-pulse me-1"></i>Nurse David
-                            <span class="role-badge badge-nurse">RN</span>
-                        </button>
-                    </div>
-                    <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('gch.reception@hprs.com')">
-                            <i class="bi bi-person-workspace me-1"></i>Reception
-                            <span class="role-badge badge-recept">REC</span>
-                        </button>
+                <div class="hospital-search-wrapper" style="position:relative;">
+                    <input type="text" id="hospital-search-input" class="form-control" 
+                           placeholder="🔍 Search hospital..." 
+                           autocomplete="off"
+                           style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:10px;font-size:0.85rem;padding:8px 12px;"
+                           onfocus="document.getElementById('hospital-dropdown-list').classList.remove('d-none')"
+                           oninput="filterHospitals(this.value)">
+                    <input type="hidden" id="hospital-select" value="gch">
+                    <div id="hospital-dropdown-list" class="d-none" style="position:absolute;top:100%;left:0;right:0;z-index:9999;border-radius:10px;overflow:hidden;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+                        <div class="hospital-option" data-value="gch" onclick="selectHospital('gch', '🏥 Global City Hospital (GCH)')"
+                             style="padding:10px 14px;cursor:pointer;background:rgba(30,41,59,0.95);color:white;font-size:0.85rem;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            🏥 Global City Hospital (GCH)
+                        </div>
+                        <div class="hospital-option" data-value="mch" onclick="selectHospital('mch', '🏥 Municipal City Hospital (MCH)')"
+                             style="padding:10px 14px;cursor:pointer;background:rgba(30,41,59,0.95);color:white;font-size:0.85rem;">
+                            🏥 Municipal City Hospital (MCH)
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <!-- MCH Quick-Select Presets (hidden by default) -->
-            <div id="presets-mch" class="mb-3 text-start d-none">
-                <div class="preset-section-label"><i class="bi bi-person-lines-fill me-1"></i>MCH — Quick Login</div>
-                <div class="row g-1 mb-1">
-                    <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('mch.admin@hprs.com')">
-                            <i class="bi bi-shield-check me-1"></i>MCH Admin
-                            <span class="role-badge badge-admin">ADMIN</span>
-                        </button>
-                    </div>
-                    <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('mch.dr.rivera@hprs.com')">
-                            <i class="bi bi-person-badge me-1"></i>Dr. Rivera
-                            <span class="role-badge badge-doctor">DR</span>
-                        </button>
-                    </div>
-                    <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('mch.dr.patel@hprs.com')">
-                            <i class="bi bi-person-badge me-1"></i>Dr. Patel
-                            <span class="role-badge badge-doctor">DR</span>
-                        </button>
-                    </div>
-                    <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('mch.nurse.priya@hprs.com')">
-                            <i class="bi bi-heart-pulse me-1"></i>Nurse Priya
-                            <span class="role-badge badge-nurse">RN</span>
-                        </button>
-                    </div>
-                    <div class="col-6">
-                        <button class="preset-btn" onclick="setPreset('mch.reception@hprs.com')">
-                            <i class="bi bi-person-workspace me-1"></i>Reception
-                            <span class="role-badge badge-recept">REC</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <hr style="border-color: rgba(255,255,255,0.12); margin: 0 0 16px 0;">
 
             <!-- Login Form -->
             <form id="login-form" class="text-start">
                 <div class="mb-3">
-                    <label class="form-label text-white-50 small">Username / Email</label>
+                    <label class="form-label text-white-50 small">Mail</label>
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-secondary text-white-50"><i class="bi bi-envelope"></i></span>
-                        <input type="email" id="email" class="form-control bg-transparent text-white border-secondary" placeholder="e.g. gch.dr.carter@hprs.com" value="gch.dr.carter@hprs.com" required>
+                        <input type="email" id="email" class="form-control bg-transparent text-white border-secondary" placeholder="e.g. gch.dr.carter@hprs.com" required>
                     </div>
                 </div>
 
@@ -227,13 +115,14 @@
                     <label class="form-label text-white-50 small">Password</label>
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-secondary text-white-50"><i class="bi bi-lock"></i></span>
-                        <input type="password" id="password" class="form-control bg-transparent text-white border-secondary" placeholder="••••••••" value="Password123!" required>
+                        <input type="password" id="password" class="form-control bg-transparent text-white border-secondary" placeholder="••••••••" required>
                     </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary-custom w-100 py-2.5">
                     <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Platform
                 </button>
+                <div class="text-center mt-3"><a href="#" class="text-white-50 small" onclick="alert('Please contact your hospital system administrator to reset your password.'); return false;"><i class="bi bi-question-circle me-1"></i>Forgot Password?</a></div>
             </form>
 
         </div>
@@ -250,39 +139,52 @@
     <script src="js/app.js"></script>
 
     <script>
-        // Fill login form with preset credentials
-        function setPreset(email) {
-            document.getElementById('email').value = email;
-            document.getElementById('password').value = 'Password123!';
-            document.getElementById('email').focus();
-        }
-
-        // Hospital dropdown handler — swaps logo + presets
+        // Hospital dropdown handler — swaps logo
         function onHospitalChange(val) {
             const logoIcon = document.getElementById('hospital-logo-icon');
             const logoName = document.getElementById('hospital-indicator-name');
-            const gchPresets = document.getElementById('presets-gch');
-            const mchPresets = document.getElementById('presets-mch');
 
             if (val === 'mch') {
                 logoIcon.className = 'hosp-logo-icon mch';
                 logoIcon.textContent = 'MCH';
                 logoName.textContent = 'Municipal City Hospital';
-                gchPresets.classList.add('d-none');
-                mchPresets.classList.remove('d-none');
-                setPreset('mch.admin@hprs.com');
             } else {
                 logoIcon.className = 'hosp-logo-icon gch';
                 logoIcon.textContent = 'GCH';
                 logoName.textContent = 'Global City Hospital';
-                gchPresets.classList.remove('d-none');
-                mchPresets.classList.add('d-none');
-                setPreset('gch.dr.carter@hprs.com');
             }
         }
 
+        function filterHospitals(query) {
+            const opts = document.querySelectorAll('.hospital-option');
+            const q = query.toLowerCase();
+            let anyVisible = false;
+            opts.forEach(opt => {
+                const matches = opt.textContent.toLowerCase().includes(q);
+                opt.style.display = matches ? 'block' : 'none';
+                if (matches) anyVisible = true;
+            });
+            document.getElementById('hospital-dropdown-list').classList.toggle('d-none', !anyVisible);
+        }
+
+        function selectHospital(val, label) {
+            document.getElementById('hospital-search-input').value = label;
+            document.getElementById('hospital-select').value = val;
+            document.getElementById('hospital-dropdown-list').classList.add('d-none');
+            onHospitalChange(val);
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.hospital-search-wrapper')) {
+                document.getElementById('hospital-dropdown-list').classList.add('d-none');
+            }
+        });
+
         // Show cloud sync status badge after scripts initialise
         document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('hospital-search-input').value = '🏥 Global City Hospital (GCH)';
+
             const badge = document.getElementById('sync-status-badge');
             setTimeout(function () {
                 if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isReady) {

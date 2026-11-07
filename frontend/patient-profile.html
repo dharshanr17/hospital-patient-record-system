@@ -29,7 +29,7 @@
                 <button id="btn-download-pdf" class="btn btn-outline-primary rounded-pill">
                     <i class="bi bi-file-earmark-pdf me-1"></i> Download Summary
                 </button>
-                <a href="visit.html" class="btn btn-primary-custom">
+                <a id="btn-record-visit" href="visit.html" class="btn btn-primary-custom">
                     <i class="bi bi-journal-plus me-1"></i> Record New Visit
                 </a>
             </div>
@@ -73,6 +73,11 @@
                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1" id="docs-count-badge" style="font-size:0.72rem;"></span>
                 </button>
             </li>
+            <li class="nav-item">
+                <button class="nav-link" id="tab-appts-btn" onclick="switchTab('appts')">
+                    <i class="bi bi-calendar-event me-1"></i> Appointments
+                </button>
+            </li>
         </ul>
 
         <!-- Tab: Medical History -->
@@ -92,6 +97,13 @@
             </div>
             <div id="patient-documents-container">
                 <div class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-info me-2"></div> Loading documents...</div>
+            </div>
+        </div>
+
+        <!-- Tab: Appointments -->
+        <div id="tab-appts" class="pt-3 d-none">
+            <div id="patient-appointments-container">
+                <div class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading appointments...</div>
             </div>
         </div>
 
@@ -268,10 +280,10 @@
     <script>
         // Tab switching
         function switchTab(tab) {
-            document.getElementById('tab-history').classList.toggle('d-none', tab !== 'history');
-            document.getElementById('tab-docs').classList.toggle('d-none', tab !== 'docs');
-            document.getElementById('tab-history-btn').classList.toggle('active', tab === 'history');
-            document.getElementById('tab-docs-btn').classList.toggle('active', tab === 'docs');
+            ['history','docs','appts'].forEach(t => {
+                document.getElementById('tab-'+t).classList.toggle('d-none', tab !== t);
+                document.getElementById('tab-'+t+'-btn').classList.toggle('active', tab === t);
+            });
         }
 
         // File dropzone label update

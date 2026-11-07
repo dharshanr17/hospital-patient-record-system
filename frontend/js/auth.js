@@ -132,8 +132,8 @@ const Auth = {
                     <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard.html">
                         <div class="${hospitalLogoClass}">${hospitalCode}</div>
                         <div>
-                            <div class="fw-bold brand-font text-dark leading-none" style="font-size:0.95rem;">${hospitalBrandName}</div>
-                            <div class="text-muted" style="font-size: 0.68rem; letter-spacing:0.04em;">HPRS Network — Patient Record System</div>
+                            <div class="fw-bold brand-font text-dark leading-none" style="font-size:0.95rem;">HPRS Network</div>
+                            <div class="text-muted" style="font-size: 0.68rem; letter-spacing:0.04em;">Patient Record System</div>
                         </div>
                     </a>
                     

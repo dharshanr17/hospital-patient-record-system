@@ -162,6 +162,12 @@ async function initPatientsPage() {
         if (sub) sub.textContent = 'Showing patients scheduled for your consultation. Enter any UHID in the search bar to retrieve patient records across all hospitals.';
     }
 
+    const isNurseOrReceptionist = ['NURSE', 'RECEPTIONIST'].includes(Auth.getRole());
+    const registerBtn = document.querySelector('[data-bs-target="#registerPatientModal"]');
+    if (isNurseOrReceptionist && registerBtn) {
+        registerBtn.classList.add('d-none');
+    }
+
     loadPatients('');
 
     if (searchInput) {
@@ -483,6 +489,42 @@ async function initPatientProfilePage() {
         }
         await renderHistory();
 
+        // ── Load Patient Appointments ──────────────────────────────────
+        async function renderPatientAppointments() {
+            const container = document.getElementById('patient-appointments-container');
+            if (!container) return;
+            try {
+                const appts = await API.get('/appointments');
+                const patientAppts = appts.filter(a => a.patientId == patientId);
+                if (!patientAppts || patientAppts.length === 0) {
+                    container.innerHTML = `<div class="text-center text-muted py-5"><i class="bi bi-calendar-x fs-1 d-block mb-2"></i>No appointments found for this patient.</div>`;
+                    return;
+                }
+                container.innerHTML = patientAppts.map(a => {
+                    const statusLower = (a.status || 'scheduled').toLowerCase().replace('_', '-');
+                    return `
+                        <div class="card card-custom mb-3 p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-bold mb-1"><i class="bi bi-calendar3 me-1"></i>${new Date(a.appointmentDatetime).toLocaleString()}</div>
+                                    <div class="text-muted small mb-1"><i class="bi bi-person-badge me-1"></i>Dr. ${a.doctorName}</div>
+                                    ${a.reason ? `<div class="text-muted small"><i class="bi bi-chat-text me-1"></i>${a.reason}</div>` : ''}
+                                </div>
+                                <span class="badge badge-status badge-${statusLower}">${a.status}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                container.innerHTML = `<div class="text-danger small p-3">Failed to load appointments: ${err.message}</div>`;
+            }
+        }
+        await renderPatientAppointments();
+
+        // Update Record New Visit link to pass patientId
+        const visitBtn = document.querySelector('a[href="visit.html"]');
+        if (visitBtn) visitBtn.href = `visit.html?patientId=${patientId}`;
+
         // ── Load Patient Documents ─────────────────────────────────────
         async function loadPatientDocuments() {
             const container = document.getElementById('patient-documents-container');
@@ -663,6 +705,12 @@ async function initAppointmentsPage() {
     const doctorApptName = document.getElementById('doctor-appt-name');
     const apptSub = document.getElementById('appointments-sub');
 
+    const isNurse = Auth.getRole() === 'NURSE';
+    const scheduleBtn = document.querySelector('[data-bs-target="#scheduleModal"]');
+    if (isNurse && scheduleBtn) {
+        scheduleBtn.classList.add('d-none');
+    }
+
     if (isDoctor) {
         if (doctorApptBanner) doctorApptBanner.classList.remove('d-none');
         const docName = localStorage.getItem('hprs_user_name') || 'Doctor';
@@ -786,8 +834,8 @@ async function loadAppointments(filterQuery = '') {
                     </div>`;
             return `
             <tr class="${rowClass}">
-                <td><span class="fw-semibold text-primary">${a.patientUhid || 'N/A'}</span></td>
-                <td class="fw-bold">${a.patientName}</td>
+                <td><a href="patient-profile.html?id=${a.patientId}" class="fw-semibold text-primary text-decoration-none">${a.patientUhid || 'N/A'}</a></td>
+                <td class="fw-bold"><a href="patient-profile.html?id=${a.patientId}" class="text-decoration-none text-dark">${a.patientName}</a></td>
                 <td>Dr. ${a.doctorName}</td>
                 <td>${new Date(a.appointmentDatetime).toLocaleString()}</td>
                 <td><small class="text-muted">${a.reason || 'General Consultation'}</small></td>
@@ -974,9 +1022,12 @@ async function initReportsPage() {
     const reportList = document.getElementById('reports-patient-list');
     if (!reportList) return;
 
-    try {
-        const patients = await API.get('/patients');
-        reportList.innerHTML = patients.map(p => `
+    function renderReportPatients(list) {
+        if (list.length === 0) {
+            reportList.innerHTML = `<div class="text-muted py-3"><i class="bi bi-search me-2"></i>No patients found matching your search.</div>`;
+            return;
+        }
+        reportList.innerHTML = list.map(p => `
             <div class="card card-custom mb-2 p-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -990,6 +1041,29 @@ async function initReportsPage() {
                 </div>
             </div>
         `).join('');
+    }
+
+    try {
+        const patients = await API.get('/patients');
+        window.allReportPatients = patients;
+        renderReportPatients(patients);
+
+        const searchInput = document.getElementById('reports-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const q = e.target.value.trim().toLowerCase();
+                if (!q) {
+                    renderReportPatients(window.allReportPatients);
+                    return;
+                }
+                const filtered = window.allReportPatients.filter(p =>
+                    (p.fullName && p.fullName.toLowerCase().includes(q)) ||
+                    (p.uhid && p.uhid.toLowerCase().includes(q)) ||
+                    (p.phone && p.phone.includes(q))
+                );
+                renderReportPatients(filtered);
+            });
+        }
     } catch (err) {
         reportList.innerHTML = `<div class="text-danger">Failed to load report directory: ${err.message}</div>`;
     }
