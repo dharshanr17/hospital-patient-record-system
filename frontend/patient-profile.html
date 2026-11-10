@@ -40,7 +40,8 @@
             <div class="row g-4">
                 <div class="col-md-3 border-end">
                     <div class="text-muted small">Unique Health ID (UHID)</div>
-                    <h4 class="text-primary fw-bold mb-2" id="profile-uhid">---</h4>
+                    <h4 class="text-primary fw-bold mb-1" id="profile-uhid">---</h4>
+                    <div class="mb-2"><span class="text-muted small">Aadhaar (Masked):</span> <span class="fw-semibold ms-1 font-monospace" id="profile-aadhaar">---</span></div>
                     <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-shield-check me-1"></i> Multi-Hospital Verified</span>
                 </div>
                 <div class="col-md-3 border-end">
@@ -140,6 +141,11 @@
                                     <option value="Female">Female</option>
                                     <option value="Other">Other</option>
                                 </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold"><i class="bi bi-shield-lock me-1 text-primary"></i>Aadhaar Number (Verified)</label>
+                                <input type="text" id="editAadhaar" class="form-control bg-light font-monospace" readonly title="Aadhaar is a permanent national identity and cannot be edited">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold">Phone Number <span class="text-danger">*</span></label>

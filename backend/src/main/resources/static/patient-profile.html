@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global City Hospital - Patient EHR Profile</title>
+    <title>HPRS — Patient EHR Profile</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
@@ -19,15 +19,18 @@
                 <a href="patients.html" class="text-decoration-none small text-muted"><i class="bi bi-arrow-left me-1"></i> Back to Patient Directory</a>
                 <h2 class="mb-0 mt-1" id="profile-name">Patient Profile</h2>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap mt-2 mt-md-0">
                 <button id="btn-edit-patient-profile" class="btn btn-outline-secondary rounded-pill">
                     <i class="bi bi-pencil-square me-1"></i> Edit Patient
                 </button>
-                <button id="btn-download-pdf" class="btn btn-outline-primary rounded-pill">
-                    <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF Summary
+                <button id="btn-upload-doc" class="btn btn-outline-info rounded-pill" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                    <i class="bi bi-upload me-1"></i> Upload Scan / PDF
                 </button>
-                <a href="visit.html" class="btn btn-primary-custom">
-                    <i class="bi bi-journal-plus me-1"></i> Record New Clinical Visit
+                <button id="btn-download-pdf" class="btn btn-outline-primary rounded-pill">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Download Summary
+                </button>
+                <a id="btn-record-visit" href="visit.html" class="btn btn-primary-custom">
+                    <i class="bi bi-journal-plus me-1"></i> Record New Visit
                 </a>
             </div>
         </div>
@@ -37,7 +40,8 @@
             <div class="row g-4">
                 <div class="col-md-3 border-end">
                     <div class="text-muted small">Unique Health ID (UHID)</div>
-                    <h4 class="text-primary fw-bold mb-2" id="profile-uhid">---</h4>
+                    <h4 class="text-primary fw-bold mb-1" id="profile-uhid">---</h4>
+                    <div class="mb-2"><span class="text-muted small">Aadhaar (Masked):</span> <span class="fw-semibold ms-1 font-monospace" id="profile-aadhaar">---</span></div>
                     <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-shield-check me-1"></i> Multi-Hospital Verified</span>
                 </div>
                 <div class="col-md-3 border-end">
@@ -57,34 +61,70 @@
             </div>
         </div>
 
-        <!-- History Content Header -->
-        <h4 class="fw-bold mb-3"><i class="bi bi-clock-history me-2 text-primary"></i>Chronological Medical History</h4>
+        <!-- Profile Tabs -->
+        <ul class="nav profile-tab-nav border-bottom mb-0" id="profile-tabs">
+            <li class="nav-item">
+                <button class="nav-link active" id="tab-history-btn" onclick="switchTab('history')">
+                    <i class="bi bi-clock-history me-1"></i> Medical History
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="tab-docs-btn" onclick="switchTab('docs')">
+                    <i class="bi bi-file-earmark-medical me-1"></i> Scans &amp; Clinical PDFs
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1" id="docs-count-badge" style="font-size:0.72rem;"></span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" id="tab-appts-btn" onclick="switchTab('appts')">
+                    <i class="bi bi-calendar-event me-1"></i> Appointments
+                </button>
+            </li>
+        </ul>
 
-        <!-- Visit History Timeline Container -->
-        <div id="visit-history-container">
-            <div class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading complete patient health record...</div>
+        <!-- Tab: Medical History -->
+        <div id="tab-history" class="pt-3">
+            <div id="visit-history-container">
+                <div class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading complete patient health record...</div>
+            </div>
+        </div>
+
+        <!-- Tab: Documents / Scans -->
+        <div id="tab-docs" class="pt-3 d-none">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-file-earmark-medical me-2 text-info"></i>Uploaded Scans &amp; Clinical PDFs</h5>
+                <button class="btn btn-outline-info btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                    <i class="bi bi-upload me-1"></i> Upload New
+                </button>
+            </div>
+            <div id="patient-documents-container">
+                <div class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-info me-2"></div> Loading documents...</div>
+            </div>
+        </div>
+
+        <!-- Tab: Appointments -->
+        <div id="tab-appts" class="pt-3 d-none">
+            <div id="patient-appointments-container">
+                <div class="text-center text-muted py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading appointments...</div>
+            </div>
         </div>
 
     </main>
 
-    <!-- Edit Patient Modal -->
+    <!-- ─── Edit Patient Modal ─────────────────────────────────────────────── -->
     <div class="modal fade" id="editPatientModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content rounded-4 border-0">
                 <div class="modal-header border-0 pb-0">
                     <div class="d-flex align-items-center justify-content-between w-100 me-2">
                         <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Patient Information</h5>
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1.5" id="editPatientUhidBadge">UHID</span>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" id="editPatientUhidBadge">UHID</span>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    
                     <div id="edit-patient-alert" class="alert alert-danger py-2 small d-none mb-3"></div>
-
                     <form id="edit-patient-form">
                         <input type="hidden" id="editPatientId">
-
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold">Full Name <span class="text-danger">*</span></label>
@@ -103,6 +143,10 @@
                                 </select>
                             </div>
 
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold"><i class="bi bi-shield-lock me-1 text-primary"></i>Aadhaar Number (Verified)</label>
+                                <input type="text" id="editAadhaar" class="form-control bg-light font-monospace" readonly title="Aadhaar is a permanent national identity and cannot be edited">
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold">Phone Number <span class="text-danger">*</span></label>
                                 <input type="tel" id="editPhone" class="form-control" placeholder="e.g. 5551234567" required>
@@ -111,30 +155,23 @@
                                 <label class="form-label small fw-semibold">Email Address</label>
                                 <input type="email" id="editEmail" class="form-control" placeholder="e.g. patient@example.com">
                             </div>
-
                             <div class="col-md-4">
                                 <label class="form-label small fw-semibold">Blood Group</label>
                                 <select id="editBloodGroup" class="form-select">
-                                    <option value="O+">O+</option>
-                                    <option value="O-">O-</option>
-                                    <option value="A+">A+</option>
-                                    <option value="A-">A-</option>
-                                    <option value="B+">B+</option>
-                                    <option value="B-">B-</option>
-                                    <option value="AB+">AB+</option>
-                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option><option value="O-">O-</option>
+                                    <option value="A+">A+</option><option value="A-">A-</option>
+                                    <option value="B+">B+</option><option value="B-">B-</option>
+                                    <option value="AB+">AB+</option><option value="AB-">AB-</option>
                                 </select>
                             </div>
                             <div class="col-md-8">
                                 <label class="form-label small fw-semibold">Known Allergies</label>
                                 <input type="text" id="editAllergies" class="form-control" placeholder="e.g. Penicillin, Peanuts, None">
                             </div>
-
                             <div class="col-12">
                                 <label class="form-label small fw-semibold">Residential Address</label>
                                 <textarea id="editAddress" class="form-control" rows="2" placeholder="Full residential street address"></textarea>
                             </div>
-
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold">Emergency Contact Name</label>
                                 <input type="text" id="editEmergencyContactName" class="form-control" placeholder="Contact Person Name">
@@ -144,12 +181,87 @@
                                 <input type="tel" id="editEmergencyContactPhone" class="form-control" placeholder="Contact Phone">
                             </div>
                         </div>
-
                         <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
                             <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-primary-custom px-4">Save Changes</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Upload Document Modal ─────────────────────────────────────────── -->
+    <div class="modal fade" id="uploadDocumentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-upload text-info me-2"></i>Upload Scan / Clinical PDF</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="upload-doc-alert" class="alert alert-danger py-2 small d-none mb-3"></div>
+                    <form id="upload-document-form">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Document Category</label>
+                            <select id="docCategory" class="form-select">
+                                <option value="X-Ray">X-Ray</option>
+                                <option value="MRI">MRI Scan</option>
+                                <option value="CT Scan">CT Scan</option>
+                                <option value="ECG">ECG / EEG</option>
+                                <option value="Lab Report">Lab Report</option>
+                                <option value="Prescription">Prescription</option>
+                                <option value="Discharge Summary">Discharge Summary</option>
+                                <option value="Other">Other Document</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Document Title <span class="text-danger">*</span></label>
+                            <input type="text" id="docTitle" class="form-control" placeholder="e.g. Chest X-Ray — Oct 2026" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Select File (PDF, PNG, JPG) <span class="text-danger">*</span></label>
+                            <div class="doc-upload-dropzone" id="doc-dropzone" onclick="document.getElementById('docFile').click()">
+                                <i class="bi bi-cloud-arrow-up"></i>
+                                <div class="fw-semibold text-muted" id="dropzone-label">Click to browse or drag & drop</div>
+                                <div class="text-muted small mt-1">Supports PDF, PNG, JPG — max 5 MB</div>
+                            </div>
+                            <input type="file" id="docFile" class="d-none" accept=".pdf,.png,.jpg,.jpeg" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Doctor Notes / Remarks</label>
+                            <textarea id="docNotes" class="form-control" rows="2" placeholder="Optional clinical notes about this document..."></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 pt-2 border-top mt-3">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary-custom px-4">
+                                <i class="bi bi-cloud-upload me-1"></i> Upload Document
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── View Document Modal ───────────────────────────────────────────── -->
+    <div class="modal fade" id="viewDocumentModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-4 border-0">
+                <div class="modal-header border-0 pb-0">
+                    <div>
+                        <h5 class="modal-title fw-bold" id="view-doc-title">Document Viewer</h5>
+                        <div class="text-muted small" id="view-doc-meta"></div>
+                    </div>
+                    <div class="d-flex gap-2 ms-auto me-2">
+                        <button class="btn btn-outline-primary btn-sm rounded-pill" id="view-doc-download-btn">
+                            <i class="bi bi-download me-1"></i> Download
+                        </button>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0" style="min-height: 70vh;">
+                    <div id="view-doc-content" class="w-100 h-100" style="min-height: 70vh;"></div>
                 </div>
             </div>
         </div>
@@ -162,9 +274,53 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase Compat SDK (required for cross-device sync) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="js/cloud-storage.js"></script>
+    <script src="js/firebase-sync.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
+
+    <script>
+        // Tab switching
+        function switchTab(tab) {
+            ['history','docs','appts'].forEach(t => {
+                document.getElementById('tab-'+t).classList.toggle('d-none', tab !== t);
+                document.getElementById('tab-'+t+'-btn').classList.toggle('active', tab === t);
+            });
+        }
+
+        // File dropzone label update
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('docFile');
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    const label = document.getElementById('dropzone-label');
+                    if (this.files && this.files[0]) {
+                        label.textContent = this.files[0].name;
+                        label.classList.add('text-primary');
+                    }
+                });
+            }
+            // Drag-and-drop support
+            const dropzone = document.getElementById('doc-dropzone');
+            if (dropzone) {
+                dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+                dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+                dropzone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropzone.classList.remove('drag-over');
+                    const files = e.dataTransfer.files;
+                    if (files.length) {
+                        document.getElementById('docFile').files = files;
+                        document.getElementById('dropzone-label').textContent = files[0].name;
+                        document.getElementById('dropzone-label').classList.add('text-primary');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

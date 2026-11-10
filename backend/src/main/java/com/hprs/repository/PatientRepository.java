@@ -15,6 +15,8 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
 
     Optional<Patient> findByUhid(String uhid);
 
+    Optional<Patient> findByAadhaarNumber(String aadhaarNumber);
+
     @Query("SELECT p FROM Patient p WHERE " +
            "LOWER(p.fullName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
            "LOWER(p.phone) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
