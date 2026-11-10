@@ -80,17 +80,17 @@ const Auth = {
 
         let navLinks = `
             <li class="nav-item">
-                <a class="nav-link ${activePage === 'dashboard' ? 'active' : ''}" href="dashboard.html">
+                <a class="nav-link ${activePage === 'dashboard' ? 'active' : ''}" href="dashboard.html?v=4.1.0">
                     <i class="bi bi-speedometer2 me-1"></i> Dashboard
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link ${activePage === 'patients' ? 'active' : ''}" href="patients.html">
+                <a class="nav-link ${activePage === 'patients' ? 'active' : ''}" href="patients.html?v=4.1.0">
                     <i class="bi bi-people me-1"></i> Patients
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link ${activePage === 'appointments' ? 'active' : ''}" href="appointments.html">
+                <a class="nav-link ${activePage === 'appointments' ? 'active' : ''}" href="appointments.html?v=4.1.0">
                     <i class="bi bi-calendar-event me-1"></i> Appointments
                 </a>
             </li>
@@ -99,7 +99,7 @@ const Auth = {
         if (role === 'DOCTOR') {
             navLinks += `
                 <li class="nav-item">
-                    <a class="nav-link ${activePage === 'visit' ? 'active' : ''}" href="visit.html">
+                    <a class="nav-link ${activePage === 'visit' ? 'active' : ''}" href="visit.html?v=4.1.0">
                         <i class="bi bi-clipboard2-pulse me-1"></i> Clinical Entry
                     </a>
                 </li>
@@ -109,7 +109,7 @@ const Auth = {
         if (role === 'ADMIN' || role === 'DOCTOR') {
             navLinks += `
                 <li class="nav-item">
-                    <a class="nav-link ${activePage === 'reports' ? 'active' : ''}" href="reports.html">
+                    <a class="nav-link ${activePage === 'reports' ? 'active' : ''}" href="reports.html?v=4.1.0">
                         <i class="bi bi-file-earmark-pdf me-1"></i> Reports
                     </a>
                 </li>
@@ -119,7 +119,7 @@ const Auth = {
         if (role === 'ADMIN') {
             navLinks += `
                 <li class="nav-item">
-                    <a class="nav-link ${activePage === 'admin' ? 'active' : ''}" href="admin.html">
+                    <a class="nav-link ${activePage === 'admin' ? 'active' : ''}" href="admin.html?v=4.1.0">
                         <i class="bi bi-shield-lock me-1"></i> Admin Panel
                     </a>
                 </li>
