@@ -63,6 +63,18 @@ const API = {
         const body = options.body ? JSON.parse(options.body) : null;
         const FS = FirebaseSync;
 
+        // Helper: Ensure patient has masked Aadhaar (backfill fallback for existing demo data)
+        const ensurePatientAadhaar = (p) => {
+            if (!p) return p;
+            if (!p.aadhaarMasked || !p.aadhaarNumber) {
+                const idNum = p.patientId || 1;
+                const num = '98765432' + String(1000 + Number(idNum)).slice(-4);
+                p.aadhaarNumber = p.aadhaarNumber || num;
+                p.aadhaarMasked = p.aadhaarMasked || ('XXXX-XXXX-' + num.slice(-4));
+            }
+            return p;
+        };
+
         // Helper: Auto-sweep overdue SCHEDULED appointments to NOT_APPEARED in Firestore
         const sweepOverdueAppointmentsFS = async () => {
             try {
@@ -158,7 +170,8 @@ const API = {
                 // Search by query
                 if (endpoint.includes('?query=')) {
                     const q = decodeURIComponent(endpoint.split('?query=')[1] || '').trim().toLowerCase();
-                    const patients = await FS.getCollection('patients');
+                    const rawPatients = await FS.getCollection('patients');
+                    const patients = rawPatients.map(ensurePatientAadhaar);
                     if (!q) {
                         if (userRole === 'DOCTOR' && userId) {
                             const [appts, visits] = await Promise.all([
@@ -186,7 +199,8 @@ const API = {
                 if (parts.length === 3) {
                     const identifier = parts[2];
                     const id = parseInt(identifier, 10);
-                    const patients = await FS.getCollection('patients');
+                    const rawPatients = await FS.getCollection('patients');
+                    const patients = rawPatients.map(ensurePatientAadhaar);
                     const found = !isNaN(id)
                         ? patients.find(p => p.patientId === id)
                         : patients.find(p => p.uhid && p.uhid.toLowerCase() === identifier.toLowerCase());
@@ -195,7 +209,8 @@ const API = {
                 }
 
                 // Default list
-                const patients = await FS.getCollection('patients');
+                const rawPatients = await FS.getCollection('patients');
+                const patients = rawPatients.map(ensurePatientAadhaar);
                 if (userRole === 'DOCTOR' && userId) {
                     const [appts, visits] = await Promise.all([
                         FS.getCollection('appointments'),
@@ -522,6 +537,7 @@ const API = {
             if (method === 'GET') {
                 // In Patients section, auto-sweep overdue appointments to "Not Appeared" without manual intervention
                 sweepOverdueAppointmentsLocal(db);
+                if (db.patients) db.patients.forEach(ensurePatientAadhaar);
 
                 const userRole = localStorage.getItem('hprs_role');
                 const userId   = parseInt(localStorage.getItem('hprs_user_id'));
