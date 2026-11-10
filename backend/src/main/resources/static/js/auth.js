@@ -19,10 +19,6 @@ const Auth = {
         return localStorage.getItem('hprs_hospital_name') || 'Global City Hospital';
     },
 
-    getHospitalId() {
-        return parseInt(localStorage.getItem('hprs_hospital_id')) || 1;
-    },
-
     getUserId() {
         return parseInt(localStorage.getItem('hprs_user_id')) || null;
     },
@@ -65,32 +61,25 @@ const Auth = {
         const role = this.getRole() || 'GUEST';
         const userName = this.getUserName() || 'User';
         const hospitalName = this.getHospitalName();
-        const hospitalId = this.getHospitalId();
-
-        // Determine hospital branding (GCH = blue, MCH = green)
-        const isMCH = hospitalId === 2 || hospitalName.includes('Municipal');
-        const hospitalCode   = isMCH ? 'MCH' : 'GCH';
-        const hospitalLogoClass = isMCH ? 'navbar-brand-logo-mch' : 'navbar-brand-logo-gch';
-        const hospitalBrandName = isMCH ? 'Municipal City Hospital' : 'Global City Hospital';
 
         let roleBadgeClass = 'badge-role-receptionist';
-        if (role === 'ADMIN')  roleBadgeClass = 'badge-role-admin';
+        if (role === 'ADMIN') roleBadgeClass = 'badge-role-admin';
         if (role === 'DOCTOR') roleBadgeClass = 'badge-role-doctor';
-        if (role === 'NURSE')  roleBadgeClass = 'badge-role-nurse';
+        if (role === 'NURSE') roleBadgeClass = 'badge-role-nurse';
 
         let navLinks = `
             <li class="nav-item">
-                <a class="nav-link ${activePage === 'dashboard' ? 'active' : ''}" href="dashboard.html?v=4.1.0">
+                <a class="nav-link ${activePage === 'dashboard' ? 'active' : ''}" href="dashboard.html">
                     <i class="bi bi-speedometer2 me-1"></i> Dashboard
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link ${activePage === 'patients' ? 'active' : ''}" href="patients.html?v=4.1.0">
+                <a class="nav-link ${activePage === 'patients' ? 'active' : ''}" href="patients.html">
                     <i class="bi bi-people me-1"></i> Patients
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link ${activePage === 'appointments' ? 'active' : ''}" href="appointments.html?v=4.1.0">
+                <a class="nav-link ${activePage === 'appointments' ? 'active' : ''}" href="appointments.html">
                     <i class="bi bi-calendar-event me-1"></i> Appointments
                 </a>
             </li>
@@ -99,7 +88,7 @@ const Auth = {
         if (role === 'DOCTOR') {
             navLinks += `
                 <li class="nav-item">
-                    <a class="nav-link ${activePage === 'visit' ? 'active' : ''}" href="visit.html?v=4.1.0">
+                    <a class="nav-link ${activePage === 'visit' ? 'active' : ''}" href="visit.html">
                         <i class="bi bi-clipboard2-pulse me-1"></i> Clinical Entry
                     </a>
                 </li>
@@ -109,7 +98,7 @@ const Auth = {
         if (role === 'ADMIN' || role === 'DOCTOR') {
             navLinks += `
                 <li class="nav-item">
-                    <a class="nav-link ${activePage === 'reports' ? 'active' : ''}" href="reports.html?v=4.1.0">
+                    <a class="nav-link ${activePage === 'reports' ? 'active' : ''}" href="reports.html">
                         <i class="bi bi-file-earmark-pdf me-1"></i> Reports
                     </a>
                 </li>
@@ -119,7 +108,7 @@ const Auth = {
         if (role === 'ADMIN') {
             navLinks += `
                 <li class="nav-item">
-                    <a class="nav-link ${activePage === 'admin' ? 'active' : ''}" href="admin.html?v=4.1.0">
+                    <a class="nav-link ${activePage === 'admin' ? 'active' : ''}" href="admin.html">
                         <i class="bi bi-shield-lock me-1"></i> Admin Panel
                     </a>
                 </li>
@@ -130,10 +119,10 @@ const Auth = {
             <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
                 <div class="container-fluid px-4">
                     <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard.html">
-                        <div class="${hospitalLogoClass}">${hospitalCode}</div>
+                        <div class="navbar-brand-logo"><i class="bi bi-hospital"></i></div>
                         <div>
-                            <div class="fw-bold brand-font text-dark leading-none" style="font-size:0.95rem;">HPRS Network</div>
-                            <div class="text-muted" style="font-size: 0.68rem; letter-spacing:0.04em;">Patient Record System</div>
+                            <div class="fw-bold brand-font text-dark leading-none">Global City Hospital</div>
+                            <div class="text-muted small" style="font-size: 0.72rem;">${hospitalName && hospitalName !== 'Global City Hospital' ? hospitalName : 'Patient Record System'}</div>
                         </div>
                     </a>
                     
@@ -147,7 +136,7 @@ const Auth = {
                         </ul>
                         
                         <div class="d-flex align-items-center gap-3">
-                            <span class="badge bg-success-subtle text-success border border-success-subtle d-none d-lg-inline-block px-2 py-1" style="font-size:0.72rem;" title="Cloud Database Synced">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle d-none d-lg-inline-block px-2.5 py-1.5" title="Cloud Database Synced">
                                 <i class="bi bi-cloud-check-fill me-1"></i> Cloud Synced
                             </span>
 
@@ -159,7 +148,6 @@ const Auth = {
                                     <li class="px-3 py-2 border-bottom">
                                         <div class="fw-bold small text-dark">${userName}</div>
                                         <span class="badge badge-role ${roleBadgeClass} mt-1">${role}</span>
-                                        <div class="text-muted mt-1" style="font-size:0.72rem;"><i class="bi bi-building me-1"></i>${hospitalBrandName}</div>
                                     </li>
                                     <li><a class="dropdown-item py-2 small" href="#" onclick="CloudStorage.exportBackup()"><i class="bi bi-download me-2 text-primary"></i> Export Cloud Backup (JSON)</a></li>
                                     <li><hr class="dropdown-divider my-1"></li>

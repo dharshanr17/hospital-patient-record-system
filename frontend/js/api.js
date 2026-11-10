@@ -63,38 +63,6 @@ const API = {
         const body = options.body ? JSON.parse(options.body) : null;
         const FS = FirebaseSync;
 
-        // Helper: Ensure patient has masked Aadhaar (backfill fallback for existing demo data)
-        const ensurePatientAadhaar = (p) => {
-            if (!p) return p;
-            if (!p.aadhaarMasked || !p.aadhaarNumber) {
-                const idNum = p.patientId || 1;
-                const num = '98765432' + String(1000 + Number(idNum)).slice(-4);
-                p.aadhaarNumber = p.aadhaarNumber || num;
-                p.aadhaarMasked = p.aadhaarMasked || ('XXXX-XXXX-' + num.slice(-4));
-            }
-            return p;
-        };
-
-        // Helper: Auto-sweep overdue SCHEDULED appointments to NOT_APPEARED in Firestore
-        const sweepOverdueAppointmentsFS = async () => {
-            try {
-                const appts = await FS.getCollection('appointments');
-                const now = new Date();
-                // Do not mark completed, cancelled, or already checked-in appointments as "Not Appeared"
-                const exemptStatuses = ['COMPLETED', 'CANCELLED', 'CHECKED_IN', 'IN_PROGRESS', 'NOT_APPEARED', 'NO_SHOW'];
-                const overdue = appts.filter(a => !exemptStatuses.includes(a.status) && new Date(a.appointmentDatetime) < now);
-                if (overdue.length > 0) {
-                    await Promise.all(overdue.map(a => {
-                        a.status = 'NOT_APPEARED';
-                        a.autoMarkedAt = now.toISOString();
-                        return FS.setDocument('appointments', String(a.appointmentId), a);
-                    }));
-                }
-            } catch (err) {
-                console.warn('[HPRS] Auto-sweep overdue appointments error:', err);
-            }
-        };
-
         // ── Auth Login ────────────────────────────────────────────────
         if (endpoint === '/auth/login' && method === 'POST') {
             const users = await FS.getCollection('users');
@@ -161,17 +129,13 @@ const API = {
             }
 
             if (method === 'GET') {
-                // In Patients section, auto-sweep overdue appointments to "Not Appeared" without manual intervention
-                await sweepOverdueAppointmentsFS();
-
                 const userRole = localStorage.getItem('hprs_role');
                 const userId   = parseInt(localStorage.getItem('hprs_user_id'));
 
                 // Search by query
                 if (endpoint.includes('?query=')) {
                     const q = decodeURIComponent(endpoint.split('?query=')[1] || '').trim().toLowerCase();
-                    const rawPatients = await FS.getCollection('patients');
-                    const patients = rawPatients.map(ensurePatientAadhaar);
+                    const patients = await FS.getCollection('patients');
                     if (!q) {
                         if (userRole === 'DOCTOR' && userId) {
                             const [appts, visits] = await Promise.all([
@@ -199,8 +163,7 @@ const API = {
                 if (parts.length === 3) {
                     const identifier = parts[2];
                     const id = parseInt(identifier, 10);
-                    const rawPatients = await FS.getCollection('patients');
-                    const patients = rawPatients.map(ensurePatientAadhaar);
+                    const patients = await FS.getCollection('patients');
                     const found = !isNaN(id)
                         ? patients.find(p => p.patientId === id)
                         : patients.find(p => p.uhid && p.uhid.toLowerCase() === identifier.toLowerCase());
@@ -209,8 +172,7 @@ const API = {
                 }
 
                 // Default list
-                const rawPatients = await FS.getCollection('patients');
-                const patients = rawPatients.map(ensurePatientAadhaar);
+                const patients = await FS.getCollection('patients');
                 if (userRole === 'DOCTOR' && userId) {
                     const [appts, visits] = await Promise.all([
                         FS.getCollection('appointments'),
@@ -229,26 +191,6 @@ const API = {
                 const callerRole = localStorage.getItem('hprs_role');
                 if (callerRole === 'NURSE') throw new Error('Access Denied: Nurses cannot register new patients.');
                 const patients = await FS.getCollection('patients');
-
-                // ── Mandatory 12-digit Aadhaar Validation ──
-                const cleanAadhaar = String(body.aadhaarNumber || '').replace(/\D/g, '');
-                if (!cleanAadhaar || cleanAadhaar.length !== 12) {
-                    throw new Error('Aadhaar Validation Error: A valid 12-digit Aadhaar number is mandatory.');
-                }
-                const maskedAadhaar = 'XXXX-XXXX-' + cleanAadhaar.slice(-4);
-
-                // ── Prevent Duplicate Registrations by Aadhaar ──
-                const dupAadhaar = patients.find(p =>
-                    (p.aadhaarNumber && String(p.aadhaarNumber).replace(/\D/g, '') === cleanAadhaar) ||
-                    (p.aadhaarMasked && p.aadhaarMasked === maskedAadhaar && (!body.patientId || p.patientId !== body.patientId))
-                );
-                if (dupAadhaar) {
-                    throw new Error(`Duplicate Aadhaar: A patient with Aadhaar number ${maskedAadhaar} is already registered (UHID: ${dupAadhaar.uhid}, Name: ${dupAadhaar.fullName}).`);
-                }
-
-                // Protect privacy with masked Aadhaar representation
-                body.aadhaarNumber = cleanAadhaar;
-                body.aadhaarMasked = maskedAadhaar;
 
                 // ── Cross-hospital UHID Sync: if UHID exists, update that record ──
                 if (body.uhid) {
@@ -294,9 +236,17 @@ const API = {
             const userId   = parseInt(localStorage.getItem('hprs_user_id'));
 
             if (method === 'GET') {
-                // Auto-sweep overdue appointments to NOT_APPEARED
-                await sweepOverdueAppointmentsFS();
                 const appts = await FS.getCollection('appointments');
+                const now = new Date();
+                // Auto-sweep: mark overdue SCHEDULED appointments as NO_SHOW
+                const sweepPromises = appts
+                    .filter(a => a.status === 'SCHEDULED' && new Date(a.appointmentDatetime) < now)
+                    .map(a => {
+                        a.status = 'NO_SHOW';
+                        a.autoMarkedAt = now.toISOString();
+                        return FS.setDocument('appointments', String(a.appointmentId), a);
+                    });
+                if (sweepPromises.length > 0) await Promise.all(sweepPromises);
                 if (userRole === 'DOCTOR' && userId) {
                     return appts.filter(a => a.doctorId == userId);
                 }
@@ -464,22 +414,6 @@ const API = {
         const method = options.method || 'GET';
         const body   = options.body ? JSON.parse(options.body) : null;
 
-        // Helper: Auto-sweep overdue appointments to NOT_APPEARED in localStorage
-        const sweepOverdueAppointmentsLocal = (database) => {
-            const now = new Date();
-            let changed = false;
-            // Do not mark completed, cancelled, or already checked-in appointments as "Not Appeared"
-            const exemptStatuses = ['COMPLETED', 'CANCELLED', 'CHECKED_IN', 'IN_PROGRESS', 'NOT_APPEARED', 'NO_SHOW'];
-            database.appointments.forEach(a => {
-                if (!exemptStatuses.includes(a.status) && new Date(a.appointmentDatetime) < now) {
-                    a.status = 'NOT_APPEARED';
-                    a.autoMarkedAt = now.toISOString();
-                    changed = true;
-                }
-            });
-            if (changed) CloudStorage.saveData(database);
-        };
-
         // 1. Auth Login
         if (endpoint === '/auth/login' && method === 'POST') {
             const user = db.users.find(u => u.email.toLowerCase() === body.email.toLowerCase());
@@ -535,10 +469,6 @@ const API = {
             }
 
             if (method === 'GET') {
-                // In Patients section, auto-sweep overdue appointments to "Not Appeared" without manual intervention
-                sweepOverdueAppointmentsLocal(db);
-                if (db.patients) db.patients.forEach(ensurePatientAadhaar);
-
                 const userRole = localStorage.getItem('hprs_role');
                 const userId   = parseInt(localStorage.getItem('hprs_user_id'));
 
@@ -586,37 +516,16 @@ const API = {
             if (method === 'POST') {
                 const callerRole = localStorage.getItem('hprs_role');
                 if (callerRole === 'NURSE') throw new Error('Access Denied: Nurses cannot register new patients.');
-
-                // ── Mandatory 12-digit Aadhaar Validation ──
-                const cleanAadhaar = String(body.aadhaarNumber || '').replace(/\D/g, '');
-                if (!cleanAadhaar || cleanAadhaar.length !== 12) {
-                    throw new Error('Aadhaar Validation Error: A valid 12-digit Aadhaar number is mandatory.');
-                }
-                const maskedAadhaar = 'XXXX-XXXX-' + cleanAadhaar.slice(-4);
-
-                // ── Prevent Duplicate Registrations by Aadhaar ──
-                const dupAadhaar = db.patients.find(p =>
-                    (p.aadhaarNumber && String(p.aadhaarNumber).replace(/\D/g, '') === cleanAadhaar) ||
-                    (p.aadhaarMasked && p.aadhaarMasked === maskedAadhaar)
-                );
-                if (dupAadhaar) {
-                    throw new Error(`Duplicate Aadhaar: Patient is already registered with Aadhaar ${maskedAadhaar} (UHID: ${dupAadhaar.uhid}, Name: ${dupAadhaar.fullName}).`);
-                }
-
                 const dup = db.patients.find(p =>
                     p.fullName.toLowerCase() === body.fullName.toLowerCase() && p.phone === body.phone
                 );
                 if (dup) throw new Error(`Duplicate: "${body.fullName}" already exists (UHID: ${dup.uhid})`);
-
-                body.aadhaarNumber = cleanAadhaar;
-                body.aadhaarMasked = maskedAadhaar;
-
                 const newId = db.patients.length + 1;
                 const uhid  = `UHID-${new Date().getFullYear()}-${10000 + newId}`;
                 const newPatient = { patientId: newId, uhid, ...body, createdAt: new Date().toISOString() };
                 db.patients.push(newPatient);
                 CloudStorage.saveData(db);
-                CloudStorage.logAudit('CREATE_PATIENT', `Registered ${newPatient.fullName} (${uhid}) with Aadhaar ${maskedAadhaar}`);
+                CloudStorage.logAudit('CREATE_PATIENT', `Registered ${newPatient.fullName} (${uhid})`);
                 return Promise.resolve(newPatient);
             }
 
@@ -637,8 +546,16 @@ const API = {
             const userRole = localStorage.getItem('hprs_role');
             const userId   = parseInt(localStorage.getItem('hprs_user_id'));
             if (method === 'GET') {
-                // Auto-sweep overdue appointments to NOT_APPEARED
-                sweepOverdueAppointmentsLocal(db);
+                const now = new Date();
+                let changed = false;
+                db.appointments.forEach(a => {
+                    if (a.status === 'SCHEDULED' && new Date(a.appointmentDatetime) < now) {
+                        a.status = 'NO_SHOW';
+                        a.autoMarkedAt = now.toISOString();
+                        changed = true;
+                    }
+                });
+                if (changed) CloudStorage.saveData(db);
                 let list = db.appointments;
                 if (userRole === 'DOCTOR' && userId) list = list.filter(a => a.doctorId == userId);
                 return Promise.resolve(list);

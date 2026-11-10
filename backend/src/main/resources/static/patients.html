@@ -3,13 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <title>Global City Hospital - Patient Directory</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=4.1.0">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-page="patients">
 
@@ -60,10 +57,10 @@
                         <tr>
                             <th>UHID</th>
                             <th>Full Name</th>
-                            <th>Aadhaar (Masked)</th>
                             <th>Gender / DOB</th>
                             <th>Phone</th>
                             <th>Blood Group</th>
+                            <th>Allergies</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -105,21 +102,6 @@
                                     <option value="Female">Female</option>
                                     <option value="Other">Other</option>
                                 </select>
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label small fw-semibold">
-                                    <i class="bi bi-shield-lock me-1 text-primary"></i>Aadhaar Number <span class="text-danger">*</span>
-                                    <span class="text-muted fw-normal">(12 digits — stored masked for privacy)</span>
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light"><i class="bi bi-credit-card-2-front text-primary"></i></span>
-                                    <input type="text" id="aadhaarNumber" class="form-control" placeholder="XXXX XXXX XXXX" maxlength="14" pattern="\d{4}\s?\d{4}\s?\d{4}" autocomplete="off" required>
-                                    <span class="input-group-text bg-light" style="cursor:pointer;" onclick="toggleAadhaarVisibility('aadhaarNumber','aadhaarToggleIcon')" title="Show/Hide">
-                                        <i id="aadhaarToggleIcon" class="bi bi-eye-slash text-muted"></i>
-                                    </span>
-                                </div>
-                                <div id="aadhaar-feedback" class="form-text text-muted">Enter the 12-digit Aadhaar number. This will be masked as XXXX-XXXX-1234 after saving.</div>
                             </div>
 
                             <div class="col-md-6">
@@ -212,11 +194,6 @@
                                 </select>
                             </div>
 
-                            <div class="col-12">
-                                <label class="form-label small fw-semibold"><i class="bi bi-shield-lock me-1 text-primary"></i>Aadhaar Number (Verified)</label>
-                                <input type="text" id="editAadhaar" class="form-control bg-light font-monospace" readonly title="Aadhaar is a permanent national identity and cannot be edited">
-                            </div>
-
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold">Phone Number <span class="text-danger">*</span></label>
                                 <input type="tel" id="editPhone" class="form-control" placeholder="e.g. 5551234567" required>
@@ -276,39 +253,9 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Firebase Compat SDK (required for cross-device sync) -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="js/cloud-storage.js?v=4.1.0"></script>
-    <script src="js/firebase-sync.js?v=4.1.0"></script>
-    <script src="js/api.js?v=4.1.0"></script>
-    <script src="js/auth.js?v=4.1.0"></script>
-    <script src="js/app.js?v=4.1.0"></script>
-    <script>
-        // Aadhaar input auto-formatter: adds spaces as user types (XXXX XXXX XXXX)
-        document.addEventListener('DOMContentLoaded', function () {
-            const aInput = document.getElementById('aadhaarNumber');
-            if (aInput) {
-                aInput.setAttribute('type', 'password');
-                aInput.addEventListener('input', function () {
-                    let val = this.value.replace(/\D/g, '').slice(0, 12);
-                    this.value = val.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
-                });
-            }
-        });
-
-        function toggleAadhaarVisibility(inputId, iconId) {
-            const inp = document.getElementById(inputId);
-            const ico = document.getElementById(iconId);
-            if (!inp || !ico) return;
-            if (inp.type === 'password') {
-                inp.type = 'text';
-                ico.className = 'bi bi-eye text-primary';
-            } else {
-                inp.type = 'password';
-                ico.className = 'bi bi-eye-slash text-muted';
-            }
-        }
-    </script>
+    <script src="js/cloud-storage.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>

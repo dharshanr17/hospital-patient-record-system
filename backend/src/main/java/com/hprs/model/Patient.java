@@ -26,12 +26,6 @@ public class Patient {
     @Column(nullable = false, unique = true, length = 20)
     private String uhid;
 
-    @Column(name = "aadhaar_number", length = 12)
-    private String aadhaarNumber;
-
-    @Column(name = "aadhaar_masked", length = 20)
-    private String aadhaarMasked;
-
     @Column(name = "full_name", nullable = false, length = 100)
     private String fullName;
 

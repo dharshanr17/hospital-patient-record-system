@@ -40,8 +40,6 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS patients (
     patient_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     uhid VARCHAR(20) NOT NULL UNIQUE,
-    aadhaar_number VARCHAR(12),
-    aadhaar_masked VARCHAR(20),
     full_name VARCHAR(100) NOT NULL,
     date_of_birth DATE,
     gender VARCHAR(10),

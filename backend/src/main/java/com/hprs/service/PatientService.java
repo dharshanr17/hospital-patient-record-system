@@ -27,16 +27,6 @@ public class PatientService {
 
     @Transactional
     public PatientDto registerPatient(PatientDto dto, Long currentUserId, String ipAddress) {
-        // Aadhaar validation & duplicate check
-        if (dto.getAadhaarNumber() == null || !dto.getAadhaarNumber().trim().matches("^\\d{12}$")) {
-            throw new IllegalArgumentException("A valid 12-digit Aadhaar number is mandatory for registration");
-        }
-        String cleanAadhaar = dto.getAadhaarNumber().trim();
-        String maskedAadhaar = "XXXX-XXXX-" + cleanAadhaar.substring(8);
-        if (patientRepository.findByAadhaarNumber(cleanAadhaar).isPresent()) {
-            throw new DuplicateRecordException("A patient with Aadhaar number " + maskedAadhaar + " is already registered.");
-        }
-
         // Duplicate patient check
         if (dto.getDateOfBirth() != null && dto.getPhone() != null && !dto.getPhone().isBlank()) {
             List<Patient> duplicates = patientRepository.findPossibleDuplicates(
@@ -59,8 +49,6 @@ public class PatientService {
 
         Patient patient = Patient.builder()
                 .uhid(uhid)
-                .aadhaarNumber(cleanAadhaar)
-                .aadhaarMasked(maskedAadhaar)
                 .fullName(dto.getFullName().trim())
                 .dateOfBirth(dto.getDateOfBirth())
                 .gender(dto.getGender())
@@ -152,8 +140,6 @@ public class PatientService {
         return PatientDto.builder()
                 .patientId(p.getPatientId())
                 .uhid(p.getUhid())
-                .aadhaarNumber(p.getAadhaarNumber())
-                .aadhaarMasked(p.getAadhaarMasked() != null ? p.getAadhaarMasked() : (p.getAadhaarNumber() != null && p.getAadhaarNumber().length() == 12 ? "XXXX-XXXX-" + p.getAadhaarNumber().substring(8) : null))
                 .fullName(p.getFullName())
                 .dateOfBirth(p.getDateOfBirth())
                 .gender(p.getGender())
