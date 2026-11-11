@@ -38,5 +38,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     long countAppointmentsForToday(@Param("startOfDay") LocalDateTime startOfDay,
                                    @Param("endOfDay") LocalDateTime endOfDay);
 
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE Appointment a SET a.status = com.hprs.model.Appointment.Status.NOT_APPEARED, a.updatedAt = CURRENT_TIMESTAMP WHERE a.status = com.hprs.model.Appointment.Status.SCHEDULED AND a.appointmentDatetime < :cutoff")
+    int markOverdueAppointmentsAsNotAppeared(@Param("cutoff") LocalDateTime cutoff);
+
     List<Appointment> findTop10ByOrderByAppointmentDatetimeDesc();
 }

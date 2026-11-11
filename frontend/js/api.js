@@ -63,6 +63,14 @@ const API = {
         const body = options.body ? JSON.parse(options.body) : null;
         const FS = FirebaseSync;
 
+        // Helper: Mask Aadhaar on outgoing patient objects to protect privacy
+        const maskPatientPrivacy = (patient) => {
+            if (!patient) return patient;
+            const sanitized = { ...patient };
+            delete sanitized.aadhaarNumber;
+            return sanitized;
+        };
+
         // Helper: Auto-sweep overdue SCHEDULED appointments to NOT_APPEARED in Firestore
         const sweepOverdueAppointmentsFS = async () => {
             try {
@@ -170,16 +178,16 @@ const API = {
                                 ...appts.filter(a => a.doctorId == userId).map(a => a.patientId),
                                 ...visits.filter(v => v.doctorId == userId).map(v => v.patientId)
                             ]);
-                            return patients.filter(p => ids.has(p.patientId));
+                            return patients.filter(p => ids.has(p.patientId)).map(maskPatientPrivacy);
                         }
-                        return patients;
+                        return patients.map(maskPatientPrivacy);
                     }
                     return patients.filter(p =>
                         (p.uhid  && p.uhid.toLowerCase().includes(q)) ||
                         (p.fullName && p.fullName.toLowerCase().includes(q)) ||
                         (p.phone && p.phone.includes(q)) ||
                         (p.email && p.email.toLowerCase().includes(q))
-                    );
+                    ).map(maskPatientPrivacy);
                 }
 
                 // Get by ID or UHID
@@ -192,7 +200,7 @@ const API = {
                         ? patients.find(p => p.patientId === id)
                         : patients.find(p => p.uhid && p.uhid.toLowerCase() === identifier.toLowerCase());
                     if (!found) throw new Error(`Patient not found: ${identifier}`);
-                    return found;
+                    return maskPatientPrivacy(found);
                 }
 
                 // Default list
@@ -206,9 +214,9 @@ const API = {
                         ...appts.filter(a => a.doctorId == userId).map(a => a.patientId),
                         ...visits.filter(v => v.doctorId == userId).map(v => v.patientId)
                     ]);
-                    return patients.filter(p => ids.has(p.patientId));
+                    return patients.filter(p => ids.has(p.patientId)).map(maskPatientPrivacy);
                 }
-                return patients;
+                return patients.map(maskPatientPrivacy);
             }
 
             if (method === 'POST') {
@@ -242,7 +250,7 @@ const API = {
                     if (byUhid) {
                         const merged = { ...byUhid, ...body, lastSyncedAt: new Date().toISOString() };
                         await FS.setDocument('patients', String(byUhid.patientId), merged);
-                        return merged;
+                        return maskPatientPrivacy(merged);
                     }
                 }
 
@@ -256,7 +264,7 @@ const API = {
                 const uhid  = `UHID-${new Date().getFullYear()}-${10000 + newId}`;
                 const newPatient = { patientId: newId, uhid, ...body, createdAt: new Date().toISOString() };
                 await FS.setDocument('patients', String(newId), newPatient);
-                return newPatient;
+                return maskPatientPrivacy(newPatient);
             }
 
             if (method === 'PUT') {
@@ -505,6 +513,13 @@ const API = {
 
         // 3. Patients
         if (endpoint.startsWith('/patients')) {
+            const maskLocalPatient = (p) => {
+                if (!p) return p;
+                const c = { ...p };
+                delete c.aadhaarNumber;
+                return c;
+            };
+
             if (endpoint.includes('/check-duplicates')) {
                 const urlParams = new URLSearchParams(endpoint.split('?')[1]);
                 const name  = urlParams.get('fullName')?.toLowerCase();
@@ -548,16 +563,16 @@ const API = {
                                 db.appointments.filter(a => a.doctorId == userId).map(a => a.patientId)
                                 .concat(db.visits.filter(v => v.doctorId == userId).map(v => v.patientId))
                             );
-                            return Promise.resolve(db.patients.filter(p => ids.has(p.patientId)));
+                            return Promise.resolve(db.patients.filter(p => ids.has(p.patientId)).map(maskLocalPatient));
                         }
-                        return Promise.resolve(db.patients);
+                        return Promise.resolve(db.patients.map(maskLocalPatient));
                     }
                     return Promise.resolve(db.patients.filter(p =>
                         p.uhid.toLowerCase().includes(q) ||
                         p.fullName.toLowerCase().includes(q) ||
                         (p.phone && p.phone.includes(q)) ||
                         (p.email && p.email.toLowerCase().includes(q))
-                    ));
+                    ).map(maskLocalPatient));
                 }
 
                 const parts = endpoint.split('/');
@@ -568,7 +583,7 @@ const API = {
                         ? db.patients.find(x => x.patientId === id)
                         : db.patients.find(x => x.uhid.toLowerCase() === identifier.toLowerCase());
                     if (!p) throw new Error('Patient not found: ' + identifier);
-                    return Promise.resolve(p);
+                    return Promise.resolve(maskLocalPatient(p));
                 }
 
                 if (userRole === 'DOCTOR' && userId) {
@@ -576,9 +591,9 @@ const API = {
                         db.appointments.filter(a => a.doctorId == userId).map(a => a.patientId)
                         .concat(db.visits.filter(v => v.doctorId == userId).map(v => v.patientId))
                     );
-                    return Promise.resolve(db.patients.filter(p => ids.has(p.patientId)));
+                    return Promise.resolve(db.patients.filter(p => ids.has(p.patientId)).map(maskLocalPatient));
                 }
-                return Promise.resolve(db.patients);
+                return Promise.resolve(db.patients.map(maskLocalPatient));
             }
 
             if (method === 'POST') {
@@ -615,7 +630,7 @@ const API = {
                 db.patients.push(newPatient);
                 CloudStorage.saveData(db);
                 CloudStorage.logAudit('CREATE_PATIENT', `Registered ${newPatient.fullName} (${uhid}) with Aadhaar ${maskedAadhaar}`);
-                return Promise.resolve(newPatient);
+                return Promise.resolve(maskLocalPatient(newPatient));
             }
 
             if (method === 'PUT') {

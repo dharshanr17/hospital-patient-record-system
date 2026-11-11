@@ -40,8 +40,8 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS patients (
     patient_id BIGINT AUTO_INCREMENT PRIMARY KEY,
     uhid VARCHAR(20) NOT NULL UNIQUE,
-    aadhaar_number VARCHAR(12),
-    aadhaar_masked VARCHAR(20),
+    aadhaar_number VARCHAR(12) NOT NULL UNIQUE,
+    aadhaar_masked VARCHAR(20) NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     date_of_birth DATE,
     gender VARCHAR(10),
@@ -127,3 +127,6 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_patients_aadhaar ON patients(aadhaar_number);
+

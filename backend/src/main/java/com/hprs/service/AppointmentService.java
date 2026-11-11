@@ -64,16 +64,10 @@ public class AppointmentService {
         return mapToDto(saved);
     }
 
+    @org.springframework.scheduling.annotation.Scheduled(fixedDelay = 60000)
     @Transactional
     public void sweepOverdueAppointments() {
-        LocalDateTime now = LocalDateTime.now();
-        List<Appointment> overdue = appointmentRepository.findAll().stream()
-                .filter(a -> a.getStatus() == Appointment.Status.SCHEDULED && a.getAppointmentDatetime() != null && a.getAppointmentDatetime().isBefore(now))
-                .collect(Collectors.toList());
-        for (Appointment a : overdue) {
-            a.setStatus(Appointment.Status.NOT_APPEARED);
-            appointmentRepository.save(a);
-        }
+        appointmentRepository.markOverdueAppointmentsAsNotAppeared(LocalDateTime.now());
     }
 
     @Transactional

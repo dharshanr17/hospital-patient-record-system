@@ -156,7 +156,7 @@ public class PatientService {
         return PatientDto.builder()
                 .patientId(p.getPatientId())
                 .uhid(p.getUhid())
-                .aadhaarNumber(p.getAadhaarNumber())
+                .aadhaarNumber(null) // Privacy Protection: Never expose unmasked 12 digits in API responses
                 .aadhaarMasked(p.getAadhaarMasked() != null ? p.getAadhaarMasked() : (p.getAadhaarNumber() != null && p.getAadhaarNumber().length() == 12 ? "XXXX-XXXX-" + p.getAadhaarNumber().substring(8) : "XXXX-XXXX-1000"))
                 .fullName(p.getFullName())
                 .dateOfBirth(p.getDateOfBirth())

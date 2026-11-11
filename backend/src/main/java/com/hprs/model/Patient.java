@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "patients", indexes = {
     @Index(name = "idx_patient_uhid", columnList = "uhid", unique = true),
+    @Index(name = "idx_patient_aadhaar", columnList = "aadhaar_number", unique = true),
     @Index(name = "idx_patient_phone", columnList = "phone"),
     @Index(name = "idx_patient_name", columnList = "full_name")
 })
@@ -26,10 +27,10 @@ public class Patient {
     @Column(nullable = false, unique = true, length = 20)
     private String uhid;
 
-    @Column(name = "aadhaar_number", length = 12)
+    @Column(name = "aadhaar_number", nullable = false, unique = true, length = 12)
     private String aadhaarNumber;
 
-    @Column(name = "aadhaar_masked", length = 20)
+    @Column(name = "aadhaar_masked", nullable = false, length = 20)
     private String aadhaarMasked;
 
     @Column(name = "full_name", nullable = false, length = 100)

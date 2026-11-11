@@ -16,7 +16,8 @@ public class PatientDto {
     private Long patientId;
     private String uhid;
 
-    @Pattern(regexp = "^$|^\\d{12}$", message = "Aadhaar number must be exactly 12 digits")
+    @NotBlank(message = "Aadhaar number is mandatory")
+    @Pattern(regexp = "^\\d{12}$", message = "Aadhaar number must be exactly 12 digits")
     private String aadhaarNumber;
     private String aadhaarMasked;
 
