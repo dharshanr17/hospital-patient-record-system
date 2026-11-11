@@ -15,9 +15,11 @@ public class Appointment {
 
     public enum Status {
         SCHEDULED,
+        CHECKED_IN,
         COMPLETED,
         CANCELLED,
-        NO_SHOW
+        NO_SHOW,
+        NOT_APPEARED
     }
 
     @Id

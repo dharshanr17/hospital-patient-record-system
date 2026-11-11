@@ -35,14 +35,14 @@ INSERT INTO users (user_id, hospital_id, full_name, email, password_hash, role, 
 VALUES (4, 1, 'Nurse Sarah Jenkins', 'nurse@hprs.com', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd0P1R5ocvW5RupC', 'NURSE', 1, 'Clinical Nursing', TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- 4. Patients
-INSERT INTO patients (patient_id, uhid, full_name, date_of_birth, gender, phone, email, address, blood_group, allergies, emergency_contact_name, emergency_contact_phone, registered_hospital_id, created_at, updated_at)
-VALUES (1, 'UHID-2026-10001', 'John Doe', '1985-06-15', 'Male', '5551234567', 'john.doe@example.com', '789 Elm St, Cityville', 'O+', 'Penicillin', 'Jane Doe', '5559876543', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO patients (patient_id, uhid, aadhaar_number, aadhaar_masked, full_name, date_of_birth, gender, phone, email, address, blood_group, allergies, emergency_contact_name, emergency_contact_phone, registered_hospital_id, created_at, updated_at)
+VALUES (1, 'UHID-2026-10001', '123456781001', 'XXXX-XXXX-1001', 'John Doe', '1985-06-15', 'Male', '5551234567', 'john.doe@example.com', '789 Elm St, Cityville', 'O+', 'Penicillin', 'Jane Doe', '5559876543', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
-INSERT INTO patients (patient_id, uhid, full_name, date_of_birth, gender, phone, email, address, blood_group, allergies, emergency_contact_name, emergency_contact_phone, registered_hospital_id, created_at, updated_at)
-VALUES (2, 'UHID-2026-10002', 'Sarah Connor', '1990-11-20', 'Female', '5552345678', 'sarah.c@example.com', '321 Oak St, Metro City', 'A-', 'Sulfa Drugs', 'Kyle Reese', '5558765432', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO patients (patient_id, uhid, aadhaar_number, aadhaar_masked, full_name, date_of_birth, gender, phone, email, address, blood_group, allergies, emergency_contact_name, emergency_contact_phone, registered_hospital_id, created_at, updated_at)
+VALUES (2, 'UHID-2026-10002', '123456781002', 'XXXX-XXXX-1002', 'Sarah Connor', '1990-11-20', 'Female', '5552345678', 'sarah.c@example.com', '321 Oak St, Metro City', 'A-', 'Sulfa Drugs', 'Kyle Reese', '5558765432', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
-INSERT INTO patients (patient_id, uhid, full_name, date_of_birth, gender, phone, email, address, blood_group, allergies, emergency_contact_name, emergency_contact_phone, registered_hospital_id, created_at, updated_at)
-VALUES (3, 'UHID-2026-10003', 'Robert Chen', '1978-03-08', 'Male', '5553456789', 'r.chen@example.com', '555 Pine Rd, Westside', 'B+', 'Dust, Peanuts', 'Lisa Chen', '5557654321', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO patients (patient_id, uhid, aadhaar_number, aadhaar_masked, full_name, date_of_birth, gender, phone, email, address, blood_group, allergies, emergency_contact_name, emergency_contact_phone, registered_hospital_id, created_at, updated_at)
+VALUES (3, 'UHID-2026-10003', '123456781003', 'XXXX-XXXX-1003', 'Robert Chen', '1978-03-08', 'Male', '5553456789', 'r.chen@example.com', '555 Pine Rd, Westside', 'B+', 'Dust, Peanuts', 'Lisa Chen', '5557654321', 2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- 5. Appointments
 INSERT INTO appointments (appointment_id, patient_id, doctor_id, hospital_id, appointment_datetime, reason, status, created_at, updated_at)

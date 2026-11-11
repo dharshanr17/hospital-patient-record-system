@@ -24,9 +24,21 @@ public class PatientService {
     private final PatientRepository patientRepository;
     private final HospitalRepository hospitalRepository;
     private final AuditLogService auditLogService;
+    private final AppointmentService appointmentService;
 
     @Transactional
     public PatientDto registerPatient(PatientDto dto, Long currentUserId, String ipAddress) {
+        // Mandatory 12-digit Aadhaar validation
+        if (dto.getAadhaarNumber() == null || !dto.getAadhaarNumber().replaceAll("\\D", "").matches("^\\d{12}$")) {
+            throw new IllegalArgumentException("A valid 12-digit Aadhaar number is mandatory for patient registration.");
+        }
+        String cleanAadhaar = dto.getAadhaarNumber().replaceAll("\\D", "");
+        if (patientRepository.findByAadhaarNumber(cleanAadhaar).isPresent()) {
+            Patient existing = patientRepository.findByAadhaarNumber(cleanAadhaar).get();
+            throw new DuplicateRecordException("A patient with Aadhaar number XXXX-XXXX-" + cleanAadhaar.substring(8) + " is already registered (UHID: " + existing.getUhid() + ")");
+        }
+        String maskedAadhaar = "XXXX-XXXX-" + cleanAadhaar.substring(8);
+
         // Duplicate patient check
         if (dto.getDateOfBirth() != null && dto.getPhone() != null && !dto.getPhone().isBlank()) {
             List<Patient> duplicates = patientRepository.findPossibleDuplicates(
@@ -49,6 +61,8 @@ public class PatientService {
 
         Patient patient = Patient.builder()
                 .uhid(uhid)
+                .aadhaarNumber(cleanAadhaar)
+                .aadhaarMasked(maskedAadhaar)
                 .fullName(dto.getFullName().trim())
                 .dateOfBirth(dto.getDateOfBirth())
                 .gender(dto.getGender())
@@ -65,13 +79,14 @@ public class PatientService {
         Patient saved = patientRepository.save(patient);
 
         auditLogService.logAction(currentUserId, saved.getPatientId(), "CREATE_PATIENT",
-                "Registered new patient with UHID: " + saved.getUhid(), ipAddress);
+                "Registered new patient with UHID: " + saved.getUhid() + " and Aadhaar: " + maskedAadhaar, ipAddress);
 
         return mapToDto(saved);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<PatientDto> searchPatients(String query) {
+        appointmentService.sweepOverdueAppointments();
         if (query == null || query.isBlank()) {
             return patientRepository.findAll().stream().limit(50).map(this::mapToDto).collect(Collectors.toList());
         }
@@ -80,8 +95,9 @@ public class PatientService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public PatientDto getPatientById(Long id) {
+        appointmentService.sweepOverdueAppointments();
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
         return mapToDto(patient);
@@ -140,6 +156,8 @@ public class PatientService {
         return PatientDto.builder()
                 .patientId(p.getPatientId())
                 .uhid(p.getUhid())
+                .aadhaarNumber(p.getAadhaarNumber())
+                .aadhaarMasked(p.getAadhaarMasked() != null ? p.getAadhaarMasked() : (p.getAadhaarNumber() != null && p.getAadhaarNumber().length() == 12 ? "XXXX-XXXX-" + p.getAadhaarNumber().substring(8) : "XXXX-XXXX-1000"))
                 .fullName(p.getFullName())
                 .dateOfBirth(p.getDateOfBirth())
                 .gender(p.getGender())

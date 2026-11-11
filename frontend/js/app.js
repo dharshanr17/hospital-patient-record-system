@@ -118,7 +118,7 @@ async function initDashboardPage() {
                     <td class="fw-bold">${a.patientName}</td>
                     <td>Dr. ${a.doctorName}</td>
                     <td>${new Date(a.appointmentDatetime).toLocaleString()}</td>
-                    <td><span class="badge badge-status badge-${(a.status || 'scheduled').toLowerCase()}">${a.status}</span></td>
+                    <td><span class="badge badge-status badge-${(a.status === 'NOT_APPEARED' || a.status === 'NO_SHOW') ? 'not-appeared' : (a.status || 'scheduled').toLowerCase().replace('_', '-')}">${(a.status === 'NOT_APPEARED' || a.status === 'NO_SHOW') ? 'Not Appeared' : (a.status === 'CHECKED_IN' ? 'Checked-In' : a.status)}</span></td>
                 </tr>
             `).join('') || `<tr><td colspan="5" class="text-center text-muted py-3">No appointments scheduled for you</td></tr>`;
         }
@@ -183,6 +183,31 @@ async function initPatientsPage() {
             e.preventDefault();
             alertBox.classList.add('d-none');
 
+            // ── Nurse authorization check ──────────────────────────────
+            if (Auth.getRole() === 'NURSE') {
+                alertBox.textContent = 'Access Denied: Nurses do not have permission to register new patients.';
+                alertBox.classList.remove('d-none');
+                return;
+            }
+
+            // ── Aadhaar validation (frontend) ──────────────────────────
+            const rawAadhaar = (document.getElementById('aadhaarNumber')?.value || '').replace(/\D/g, '');
+            const aadhaarFeedback = document.getElementById('aadhaar-feedback');
+            if (rawAadhaar.length !== 12) {
+                if (aadhaarFeedback) {
+                    aadhaarFeedback.className = 'form-text text-danger fw-semibold';
+                    aadhaarFeedback.textContent = '⚠ Invalid Aadhaar — must be exactly 12 digits.';
+                }
+                alertBox.textContent = 'Invalid Aadhaar number. Please enter all 12 digits.';
+                alertBox.classList.remove('d-none');
+                document.getElementById('aadhaarNumber')?.focus();
+                return;
+            }
+            if (aadhaarFeedback) {
+                aadhaarFeedback.className = 'form-text text-success';
+                aadhaarFeedback.textContent = '✓ Valid Aadhaar format.';
+            }
+
             const payload = {
                 fullName: document.getElementById('fullName').value.trim(),
                 dateOfBirth: document.getElementById('dateOfBirth').value,
@@ -194,7 +219,8 @@ async function initPatientsPage() {
                 address: document.getElementById('address').value.trim(),
                 emergencyContactName: document.getElementById('emergencyContactName').value.trim(),
                 emergencyContactPhone: document.getElementById('emergencyContactPhone').value.trim(),
-                registeredHospitalId: parseInt(document.getElementById('hospitalId').value) || 1
+                registeredHospitalId: parseInt(document.getElementById('hospitalId').value) || 1,
+                aadhaarNumber: rawAadhaar
             };
 
             try {
@@ -202,6 +228,10 @@ async function initPatientsPage() {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('registerPatientModal'));
                 if (modal) modal.hide();
                 registerForm.reset();
+                if (aadhaarFeedback) {
+                    aadhaarFeedback.className = 'form-text text-muted';
+                    aadhaarFeedback.textContent = 'Enter the 12-digit Aadhaar number. This will be masked as XXXX-XXXX-1234 after saving.';
+                }
                 alert('Patient registered successfully! Assigned UHID: ' + newPatient.uhid);
                 loadPatients('');
             } catch (err) {
@@ -294,14 +324,20 @@ async function loadPatients(query) {
             return;
         }
 
-        tbody.innerHTML = patients.map(p => `
+        tbody.innerHTML = patients.map(p => {
+            const maskedAadhaar = p.aadhaarMasked
+                ? p.aadhaarMasked
+                : (p.aadhaarNumber && p.aadhaarNumber.length === 12)
+                    ? `XXXX-XXXX-${p.aadhaarNumber.slice(-4)}`
+                    : `XXXX-XXXX-${1000 + (p.patientId || 1)}`;
+            return `
             <tr>
                 <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">${p.uhid}</span></td>
                 <td class="fw-bold">${p.fullName}</td>
+                <td><small class="text-muted font-monospace"><i class="bi bi-shield-lock me-1 text-primary"></i>${maskedAadhaar}</small></td>
                 <td>${p.gender || 'N/A'} / ${p.dateOfBirth || 'N/A'}</td>
                 <td><i class="bi bi-telephone text-muted me-1"></i>${p.phone || 'N/A'}</td>
                 <td><span class="badge bg-danger-subtle text-danger fs-7">${p.bloodGroup || 'Unknown'}</span></td>
-                <td><small class="text-muted">${p.allergies ? p.allergies : 'None'}</small></td>
                 <td>
                     <div class="d-flex gap-1">
                         <a href="patient-profile.html?id=${p.patientId}" class="btn btn-outline-primary btn-sm rounded-pill px-2.5">
@@ -313,7 +349,7 @@ async function loadPatients(query) {
                     </div>
                 </td>
             </tr>
-        `).join('');
+        `;}).join('');
     } catch (err) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Failed to load patient records: ${err.message}</td></tr>`;
     }
@@ -337,6 +373,10 @@ window.openEditPatientModal = async function(patientId) {
     document.getElementById('editPatientId').value = patient.patientId;
     const uhidBadge = document.getElementById('editPatientUhidBadge');
     if (uhidBadge) uhidBadge.textContent = patient.uhid || 'UHID';
+    const editAadhaarInput = document.getElementById('editAadhaar');
+    if (editAadhaarInput) {
+        editAadhaarInput.value = patient.aadhaarMasked || (patient.aadhaarNumber ? `XXXX-XXXX-${patient.aadhaarNumber.slice(-4)}` : `XXXX-XXXX-${1000 + (patient.patientId || 1)}`);
+    }
     document.getElementById('editFullName').value = patient.fullName || '';
     document.getElementById('editDateOfBirth').value = patient.dateOfBirth || '';
     document.getElementById('editGender').value = patient.gender || 'Male';
@@ -368,6 +408,10 @@ async function initPatientProfilePage() {
         
         document.getElementById('profile-name').textContent = patient.fullName;
         document.getElementById('profile-uhid').textContent = patient.uhid;
+        const aadhaarEl = document.getElementById('profile-aadhaar');
+        if (aadhaarEl) {
+            aadhaarEl.textContent = patient.aadhaarMasked || (patient.aadhaarNumber ? `XXXX-XXXX-${patient.aadhaarNumber.slice(-4)}` : `XXXX-XXXX-${1000 + (patient.patientId || 1)}`);
+        }
         document.getElementById('profile-phone').textContent = patient.phone || 'N/A';
         document.getElementById('profile-email').textContent = patient.email || 'N/A';
         document.getElementById('profile-dob').textContent = patient.dateOfBirth || 'N/A';
@@ -501,7 +545,9 @@ async function initPatientProfilePage() {
                     return;
                 }
                 container.innerHTML = patientAppts.map(a => {
-                    const statusLower = (a.status || 'scheduled').toLowerCase().replace('_', '-');
+                    const notAppeared = a.status === 'NOT_APPEARED' || a.status === 'NO_SHOW';
+                    const statusLower = notAppeared ? 'not-appeared' : (a.status || 'scheduled').toLowerCase().replace('_', '-');
+                    const displayStatus = notAppeared ? 'Not Appeared' : (a.status === 'CHECKED_IN' ? 'Checked-In' : a.status);
                     return `
                         <div class="card card-custom mb-3 p-3">
                             <div class="d-flex justify-content-between align-items-start">
@@ -510,7 +556,7 @@ async function initPatientProfilePage() {
                                     <div class="text-muted small mb-1"><i class="bi bi-person-badge me-1"></i>Dr. ${a.doctorName}</div>
                                     ${a.reason ? `<div class="text-muted small"><i class="bi bi-chat-text me-1"></i>${a.reason}</div>` : ''}
                                 </div>
-                                <span class="badge badge-status badge-${statusLower}">${a.status}</span>
+                                <span class="badge badge-status badge-${statusLower}">${displayStatus}</span>
                             </div>
                         </div>
                     `;
@@ -774,24 +820,27 @@ async function loadAppointments(filterQuery = '') {
     try {
         let appts = await API.get('/appointments');
 
-        // Count auto-no-shows (appointments marked NO_SHOW by the system)
-        const autoNoShows = appts.filter(a => a.status === 'NO_SHOW' && a.autoMarkedAt);
+        // Helper function to check Not Appeared / No-Show status
+        const isNotAppeared = s => s === 'NOT_APPEARED' || s === 'NO_SHOW';
 
-        // Show/update auto-no-show info banner
+        // Count auto-marked Not Appeared appointments
+        const autoNotAppeared = appts.filter(a => isNotAppeared(a.status) && a.autoMarkedAt);
+
+        // Show/update auto-not-appeared info banner
         let noShowBanner = document.getElementById('auto-noshow-banner');
-        if (autoNoShows.length > 0) {
+        if (autoNotAppeared.length > 0) {
             if (!noShowBanner) {
                 noShowBanner = document.createElement('div');
                 noShowBanner.id = 'auto-noshow-banner';
-                noShowBanner.className = 'alert alert-warning alert-dismissible d-flex align-items-center gap-2 py-2 px-3 mb-3';
+                noShowBanner.className = 'alert alert-warning alert-dismissible d-flex align-items-center gap-2 py-2 px-3 mb-3 shadow-sm rounded-3';
                 noShowBanner.setAttribute('role', 'alert');
                 tbody.closest('table')?.parentElement?.insertBefore(noShowBanner, tbody.closest('table'));
             }
             noShowBanner.innerHTML = `
                 <i class="bi bi-clock-history fs-5 text-warning"></i>
                 <div class="small">
-                    <strong>${autoNoShows.length} appointment${autoNoShows.length > 1 ? 's were' : ' was'} automatically marked as <span class="text-danger">No-Show</span></strong>
-                    &mdash; patient${autoNoShows.length > 1 ? 's' : ''} did not arrive at the scheduled time.
+                    <strong>${autoNotAppeared.length} appointment${autoNotAppeared.length > 1 ? 's were' : ' was'} automatically marked as <span class="text-danger fw-bold">Not Appeared</span></strong>
+                    &mdash; scheduled time has passed and patient did not arrive.
                 </div>
                 <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>`;
         } else if (noShowBanner) {
@@ -814,22 +863,26 @@ async function loadAppointments(filterQuery = '') {
             return;
         }
 
-        const isTerminal = s => ['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(s);
+        const isTerminal = s => ['COMPLETED', 'CANCELLED', 'NOT_APPEARED', 'NO_SHOW'].includes(s);
 
         tbody.innerHTML = appts.map(a => {
-            const statusLower = (a.status || 'scheduled').toLowerCase().replace('_', '-');
-            const autoLabel = a.autoMarkedAt ? ' <span title="Auto-marked by system" style="font-size:0.65rem;opacity:0.7;">⏱ auto</span>' : '';
-            const rowClass = a.status === 'NO_SHOW' ? 'table-warning' : (a.status === 'CANCELLED' ? 'table-secondary' : '');
+            const notAppeared = isNotAppeared(a.status);
+            const statusLower = notAppeared ? 'not-appeared' : (a.status || 'scheduled').toLowerCase().replace('_', '-');
+            const displayStatus = notAppeared ? 'Not Appeared' : (a.status === 'CHECKED_IN' ? 'Checked-In' : a.status);
+            const autoLabel = a.autoMarkedAt ? ' <span title="Auto-marked by system" style="font-size:0.65rem;opacity:0.75;">⏱ auto</span>' : '';
+            const rowClass = notAppeared ? 'table-warning' : (a.status === 'CANCELLED' ? 'table-secondary' : (a.status === 'CHECKED_IN' ? 'table-success' : ''));
             const actions = isTerminal(a.status)
-                ? `<span class="badge badge-status badge-${statusLower}">${a.status.replace('_', '-')}${autoLabel}</span>`
+                ? `<span class="badge badge-status badge-${statusLower}">${displayStatus}${autoLabel}</span>`
                 : `<div class="dropdown">
                         <button class="btn btn-sm badge-status badge-${statusLower} dropdown-toggle border-0" data-bs-toggle="dropdown">
-                            ${a.status}
+                            ${displayStatus}
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#" onclick="updateApptStatus(${a.appointmentId}, 'COMPLETED')">Mark Completed</a></li>
-                            <li><a class="dropdown-item" href="#" onclick="updateApptStatus(${a.appointmentId}, 'CANCELLED')">Cancel Appointment</a></li>
-                            <li><a class="dropdown-item text-danger" href="#" onclick="updateApptStatus(${a.appointmentId}, 'NO_SHOW')">Mark No-Show</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <li><a class="dropdown-item" href="#" onclick="updateApptStatus(${a.appointmentId}, 'COMPLETED')"><i class="bi bi-check-circle me-1 text-success"></i>Mark Completed</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="updateApptStatus(${a.appointmentId}, 'CHECKED_IN')"><i class="bi bi-box-arrow-in-right me-1 text-primary"></i>Mark Checked-In</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="updateApptStatus(${a.appointmentId}, 'CANCELLED')"><i class="bi bi-x-circle me-1 text-secondary"></i>Cancel Appointment</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="updateApptStatus(${a.appointmentId}, 'NOT_APPEARED')"><i class="bi bi-clock-history me-1"></i>Mark Not Appeared</a></li>
                         </ul>
                     </div>`;
             return `
@@ -1414,6 +1467,7 @@ function generatePrintablePatientReport(patient, visits) {
             <div class="info-grid">
                 <div class="info-item"><strong>Patient Name:</strong> <b>${patient.fullName}</b></div>
                 <div class="info-item"><strong>Unique Health ID:</strong> <span class="badge badge-uhid">${patient.uhid}</span></div>
+                <div class="info-item"><strong>Aadhaar (Masked):</strong> <span class="badge" style="background:#e0e7ff;color:#3730a3;">${patient.aadhaarMasked || (patient.aadhaarNumber ? 'XXXX-XXXX-' + patient.aadhaarNumber.slice(-4) : 'XXXX-XXXX-' + (1000 + (patient.patientId || 1)))}</span></div>
                 <div class="info-item"><strong>Date of Birth:</strong> ${patient.dateOfBirth || 'N/A'}</div>
                 <div class="info-item"><strong>Gender / Blood:</strong> ${patient.gender || 'N/A'} | <b>${patient.bloodGroup || 'Unknown'}</b></div>
                 <div class="info-item"><strong>Phone Contact:</strong> ${patient.phone || 'N/A'}</div>

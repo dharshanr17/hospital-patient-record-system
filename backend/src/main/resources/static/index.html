@@ -3,32 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global City Hospital | Login</title>
+    <title>HPRS | Hospital Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .sync-badge {
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .sync-badge.live   { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.35); }
+        .sync-badge.local  { background: rgba(245,158,11,0.2); color: #fcd34d; border: 1px solid rgba(245,158,11,0.35); }
+        .sync-badge.check  { background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
+        /* Hospital Logo container above HPRS Network */
+        #hospital-logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            min-height: 48px;
+            transition: all 0.3s ease;
+        }
+        .hosp-logo-icon {
+            width: 48px; height: 48px;
+            border-radius: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.5px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+            flex-shrink: 0;
+        }
+        .hosp-logo-icon.gch { background: linear-gradient(135deg, #1d4ed8, #0ea5e9); }
+        .hosp-logo-icon.mch { background: linear-gradient(135deg, #047857, #14b8a6); }
+        .hosp-logo-text { text-align: left; }
+        .hosp-logo-text .hosp-name { font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.95); line-height: 1.1; }
+        .hosp-logo-text .hosp-tag  { font-size: 0.67rem; color: rgba(255,255,255,0.45); }
+        /* Hospital dropdown search wrapper */
+        .hospital-search-wrapper input::placeholder { color: rgba(255,255,255,0.45); }
+    </style>
 </head>
 <body data-page="login">
 
     <div class="login-container">
         <div class="login-glass-card text-center">
-            
-            <div class="d-inline-flex align-items-center justify-content-center mb-3" 
-                 style="width: 58px; height: 58px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 16px; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);">
-                <i class="bi bi-hospital text-white fs-2"></i>
+
+            <!-- Dynamic Hospital Logo (above HPRS Network) -->
+            <div id="hospital-logo-container">
+                <div class="hosp-logo-icon gch" id="hospital-logo-icon">GCH</div>
+                <div class="hosp-logo-text">
+                    <div class="hosp-name" id="hospital-indicator-name">Global City Hospital</div>
+                    <div class="hosp-tag">HPRS Partner Institution</div>
+                </div>
             </div>
 
-            <h3 class="brand-font text-white mb-1">Global City Hospital</h3>
-            <p class="text-white-50 small mb-4">Patient Record System & Cloud Healthcare Platform</p>
+            <h3 class="brand-font text-white mb-1">HPRS Network</h3>
+            <p class="text-white-50 small mb-2">Patient Record System &amp; Cross-Hospital Cloud Sync</p>
+
+            <!-- Cloud Sync Status Badge -->
+            <div class="mb-3">
+                <span id="sync-status-badge" class="sync-badge check">
+                    <i class="bi bi-arrow-repeat"></i> Checking cloud…
+                </span>
+            </div>
 
             <div id="login-alert" class="alert alert-danger py-2 small d-none" role="alert"></div>
 
+            <!-- Hospital Dropdown with Search -->
+            <div class="mb-3 text-start">
+                <label class="form-label text-white-50 small"><i class="bi bi-building me-1"></i>Select Hospital</label>
+                <div class="hospital-search-wrapper" style="position:relative;">
+                    <input type="text" id="hospital-search-input" class="form-control" 
+                           placeholder="🔍 Search hospital..." 
+                           autocomplete="off"
+                           style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:10px;font-size:0.85rem;padding:8px 12px;"
+                           onfocus="document.getElementById('hospital-dropdown-list').classList.remove('d-none')"
+                           oninput="filterHospitals(this.value)">
+                    <input type="hidden" id="hospital-select" value="gch">
+                    <div id="hospital-dropdown-list" class="d-none" style="position:absolute;top:100%;left:0;right:0;z-index:9999;border-radius:10px;overflow:hidden;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+                        <div class="hospital-option" data-value="gch" onclick="selectHospital('gch', '🏥 Global City Hospital (GCH)')"
+                             style="padding:10px 14px;cursor:pointer;background:rgba(30,41,59,0.95);color:white;font-size:0.85rem;border-bottom:1px solid rgba(255,255,255,0.1);">
+                            🏥 Global City Hospital (GCH)
+                        </div>
+                        <div class="hospital-option" data-value="mch" onclick="selectHospital('mch', '🏥 Municipal City Hospital (MCH)')"
+                             style="padding:10px 14px;cursor:pointer;background:rgba(30,41,59,0.95);color:white;font-size:0.85rem;">
+                            🏥 Municipal City Hospital (MCH)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login Form -->
             <form id="login-form" class="text-start">
                 <div class="mb-3">
-                    <label class="form-label text-white-50 small">Username / Email</label>
+                    <label class="form-label text-white-50 small">Mail</label>
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-secondary text-white-50"><i class="bi bi-envelope"></i></span>
-                        <input type="email" id="email" class="form-control bg-transparent text-white border-secondary" placeholder="e.g. doctor@hprs.com" value="admin@hprs.com" required>
+                        <input type="email" id="email" class="form-control bg-transparent text-white border-secondary" placeholder="e.g. gch.dr.carter@hprs.com" required>
                     </div>
                 </div>
 
@@ -36,22 +115,87 @@
                     <label class="form-label text-white-50 small">Password</label>
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-secondary text-white-50"><i class="bi bi-lock"></i></span>
-                        <input type="password" id="password" class="form-control bg-transparent text-white border-secondary" placeholder="••••••••" value="Password123!" required>
+                        <input type="password" id="password" class="form-control bg-transparent text-white border-secondary" placeholder="••••••••" required>
                     </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary-custom w-100 py-2.5">
                     <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Platform
                 </button>
+                <div class="text-center mt-3"><a href="#" class="text-white-50 small" onclick="alert('Please contact your hospital system administrator to reset your password.'); return false;"><i class="bi bi-question-circle me-1"></i>Forgot Password?</a></div>
             </form>
 
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase Compat SDK (required for cross-device sync) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="js/cloud-storage.js"></script>
+    <script src="js/firebase-sync.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
+
+    <script>
+        // Hospital dropdown handler — swaps logo
+        function onHospitalChange(val) {
+            const logoIcon = document.getElementById('hospital-logo-icon');
+            const logoName = document.getElementById('hospital-indicator-name');
+
+            if (val === 'mch') {
+                logoIcon.className = 'hosp-logo-icon mch';
+                logoIcon.textContent = 'MCH';
+                logoName.textContent = 'Municipal City Hospital';
+            } else {
+                logoIcon.className = 'hosp-logo-icon gch';
+                logoIcon.textContent = 'GCH';
+                logoName.textContent = 'Global City Hospital';
+            }
+        }
+
+        function filterHospitals(query) {
+            const opts = document.querySelectorAll('.hospital-option');
+            const q = query.toLowerCase();
+            let anyVisible = false;
+            opts.forEach(opt => {
+                const matches = opt.textContent.toLowerCase().includes(q);
+                opt.style.display = matches ? 'block' : 'none';
+                if (matches) anyVisible = true;
+            });
+            document.getElementById('hospital-dropdown-list').classList.toggle('d-none', !anyVisible);
+        }
+
+        function selectHospital(val, label) {
+            document.getElementById('hospital-search-input').value = label;
+            document.getElementById('hospital-select').value = val;
+            document.getElementById('hospital-dropdown-list').classList.add('d-none');
+            onHospitalChange(val);
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.hospital-search-wrapper')) {
+                document.getElementById('hospital-dropdown-list').classList.add('d-none');
+            }
+        });
+
+        // Show cloud sync status badge after scripts initialise
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('hospital-search-input').value = '🏥 Global City Hospital (GCH)';
+
+            const badge = document.getElementById('sync-status-badge');
+            setTimeout(function () {
+                if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isReady) {
+                    badge.className = 'sync-badge live';
+                    badge.innerHTML = '<i class="bi bi-cloud-check-fill"></i> Cloud Sync Active — Cross-hospital data live';
+                } else {
+                    badge.className = 'sync-badge local';
+                    badge.innerHTML = '<i class="bi bi-hdd-fill"></i> Local Mode — Configure Firebase for cross-hospital sync';
+                }
+            }, 2500);
+        });
+    </script>
 </body>
 </html>

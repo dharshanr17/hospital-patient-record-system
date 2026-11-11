@@ -64,8 +64,21 @@ public class AppointmentService {
         return mapToDto(saved);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
+    public void sweepOverdueAppointments() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Appointment> overdue = appointmentRepository.findAll().stream()
+                .filter(a -> a.getStatus() == Appointment.Status.SCHEDULED && a.getAppointmentDatetime() != null && a.getAppointmentDatetime().isBefore(now))
+                .collect(Collectors.toList());
+        for (Appointment a : overdue) {
+            a.setStatus(Appointment.Status.NOT_APPEARED);
+            appointmentRepository.save(a);
+        }
+    }
+
+    @Transactional
     public List<AppointmentDto> getAppointmentsForDate(Long doctorId, LocalDate date) {
+        sweepOverdueAppointments();
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
         return appointmentRepository.findByDoctorAndDateRange(doctorId, startOfDay, endOfDay).stream()
@@ -73,8 +86,9 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<AppointmentDto> getPatientAppointments(Long patientId) {
+        sweepOverdueAppointments();
         return appointmentRepository.findByPatient_PatientIdOrderByAppointmentDatetimeDesc(patientId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
