@@ -67,11 +67,23 @@ const Auth = {
         const hospitalName = this.getHospitalName();
         const hospitalId = this.getHospitalId();
 
-        // Determine hospital branding (GCH = blue, MCH = green)
-        const isMCH = hospitalId === 2 || hospitalName.includes('Municipal');
-        const hospitalCode   = isMCH ? 'MCH' : 'GCH';
-        const hospitalLogoClass = isMCH ? 'navbar-brand-logo-mch' : 'navbar-brand-logo-gch';
-        const hospitalBrandName = isMCH ? 'Municipal City Hospital' : 'Global City Hospital';
+        // Determine hospital branding across 10 hospitals
+        const hospitalMap = {
+            1:  { code: 'GCH',  name: 'Global City Hospital',        cls: 'navbar-brand-logo-gch' },
+            2:  { code: 'MCH',  name: 'Municipal City Hospital',      cls: 'navbar-brand-logo-mch' },
+            3:  { code: 'SMC',  name: 'Sunrise Medical Center',       cls: 'navbar-brand-logo-gch' },
+            4:  { code: 'ASH',  name: 'Apollo Speciality Hospital',   cls: 'navbar-brand-logo-gch' },
+            5:  { code: 'CHI',  name: 'City Heart Institute',         cls: 'navbar-brand-logo-mch' },
+            6:  { code: 'GVCH', name: 'Greenview Community Hospital', cls: 'navbar-brand-logo-mch' },
+            7:  { code: 'STGH', name: 'St. Thomas General Hospital',  cls: 'navbar-brand-logo-gch' },
+            8:  { code: 'NCC',  name: 'National Cancer Centre',       cls: 'navbar-brand-logo-gch' },
+            9:  { code: 'LMH',  name: 'LifeCare Maternity Hospital',  cls: 'navbar-brand-logo-mch' },
+            10: { code: 'MSBH', name: 'Metro Spine & Brain Hospital', cls: 'navbar-brand-logo-gch' }
+        };
+        const hospInfo = hospitalMap[hospitalId] || { code: 'HPRS', name: hospitalName, cls: 'navbar-brand-logo-gch' };
+        const hospitalCode      = hospInfo.code;
+        const hospitalLogoClass = hospInfo.cls;
+        const hospitalBrandName = hospInfo.name;
 
         let roleBadgeClass = 'badge-role-receptionist';
         if (role === 'ADMIN')  roleBadgeClass = 'badge-role-admin';

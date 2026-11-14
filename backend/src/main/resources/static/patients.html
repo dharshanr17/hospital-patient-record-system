@@ -163,7 +163,24 @@
                                 <input type="tel" id="emergencyContactPhone" class="form-control" placeholder="Contact Phone">
                             </div>
 
-                            <input type="hidden" id="hospitalId" value="1">
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">
+                                    <i class="bi bi-hospital me-1 text-primary"></i>Registering Hospital <span class="text-danger">*</span>
+                                </label>
+                                <select id="hospitalId" class="form-select" required>
+                                    <option value="1">Global City Hospital (GCH)</option>
+                                    <option value="2">Municipal City Hospital (MCH)</option>
+                                    <option value="3">Sunrise Medical Center (SMC)</option>
+                                    <option value="4">Apollo Speciality Hospital (ASH)</option>
+                                    <option value="5">City Heart Institute (CHI)</option>
+                                    <option value="6">Greenview Community Hospital (GVCH)</option>
+                                    <option value="7">St. Thomas General Hospital (STGH)</option>
+                                    <option value="8">National Cancer Centre (NCC)</option>
+                                    <option value="9">LifeCare Maternity Hospital (LMH)</option>
+                                    <option value="10">Metro Spine & Brain Hospital (MSBH)</option>
+                                </select>
+                                <div class="form-text text-muted">Select the originating hospital in the centralized healthcare network.</div>
+                            </div>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
