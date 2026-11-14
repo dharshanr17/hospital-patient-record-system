@@ -208,10 +208,6 @@ async function initPatientsPage() {
                 aadhaarFeedback.textContent = '✓ Valid Aadhaar format.';
             }
 
-            const hospSelect = document.getElementById('hospitalId');
-            const hospId = parseInt(hospSelect?.value) || 1;
-            const hospName = hospSelect?.options[hospSelect.selectedIndex]?.text?.replace(/\s*\([^)]*\)$/, '') || 'Global City Hospital';
-
             const payload = {
                 fullName: document.getElementById('fullName').value.trim(),
                 dateOfBirth: document.getElementById('dateOfBirth').value,
@@ -223,8 +219,7 @@ async function initPatientsPage() {
                 address: document.getElementById('address').value.trim(),
                 emergencyContactName: document.getElementById('emergencyContactName').value.trim(),
                 emergencyContactPhone: document.getElementById('emergencyContactPhone').value.trim(),
-                registeredHospitalId: hospId,
-                registeredHospitalName: hospName,
+                registeredHospitalId: parseInt(document.getElementById('hospitalId').value) || 1,
                 aadhaarNumber: rawAadhaar
             };
 
@@ -789,7 +784,7 @@ async function initAppointmentsPage() {
             const payload = {
                 patientId: parseInt(document.getElementById('apptPatientId').value),
                 doctorId: parseInt(document.getElementById('apptDoctorId').value),
-                hospitalId: parseInt(document.getElementById('apptHospitalId')?.value) || 1,
+                hospitalId: 1,
                 appointmentDatetime: document.getElementById('apptDatetime').value,
                 reason: document.getElementById('apptReason').value.trim()
             };
