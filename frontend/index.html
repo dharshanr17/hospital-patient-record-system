@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HPRS | Hospital Login</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>HPRS | Hospital Network Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=4.2.1">
     <style>
         .sync-badge {
             font-size: 0.7rem;
@@ -19,54 +22,73 @@
         .sync-badge.live   { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.35); }
         .sync-badge.local  { background: rgba(245,158,11,0.2); color: #fcd34d; border: 1px solid rgba(245,158,11,0.35); }
         .sync-badge.check  { background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
+        
         /* Hospital Logo container above HPRS Network */
         #hospital-logo-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            min-height: 48px;
+            gap: 12px;
+            margin-bottom: 12px;
+            min-height: 52px;
             transition: all 0.3s ease;
         }
         .hosp-logo-icon {
-            width: 48px; height: 48px;
-            border-radius: 13px;
+            width: 50px; height: 50px;
+            border-radius: 14px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.3rem;
+            font-size: 1.15rem;
             font-weight: 800;
             color: white;
             letter-spacing: -0.5px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
             flex-shrink: 0;
+            transition: all 0.3s ease;
         }
-        .hosp-logo-icon.gch { background: linear-gradient(135deg, #1d4ed8, #0ea5e9); }
-        .hosp-logo-icon.mch { background: linear-gradient(135deg, #047857, #14b8a6); }
         .hosp-logo-text { text-align: left; }
-        .hosp-logo-text .hosp-name { font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.95); line-height: 1.1; }
-        .hosp-logo-text .hosp-tag  { font-size: 0.67rem; color: rgba(255,255,255,0.45); }
-        /* Hospital dropdown search wrapper */
-        .hospital-search-wrapper input::placeholder { color: rgba(255,255,255,0.45); }
+        .hosp-logo-text .hosp-name { font-size: 0.9rem; font-weight: 700; color: rgba(255,255,255,0.95); line-height: 1.2; }
+        .hosp-logo-text .hosp-tag  { font-size: 0.7rem; color: rgba(255,255,255,0.5); }
+        
+        /* Custom styled select boxes for dark glassmorphism card */
+        .custom-dark-select {
+            background-color: rgba(30, 41, 59, 0.95) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            color: #f8fafc !important;
+            border-radius: 10px !important;
+            font-size: 0.88rem !important;
+            padding: 9px 12px !important;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .custom-dark-select:focus {
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.25) !important;
+        }
+        .custom-dark-select option {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+            padding: 8px 10px;
+        }
     </style>
 </head>
 <body data-page="login">
 
-    <div class="login-container">
-        <div class="login-glass-card text-center">
+    <div class="login-container py-4">
+        <div class="login-glass-card text-center" style="max-width: 480px; width: 92%;">
 
-            <!-- Dynamic Hospital Logo (above HPRS Network) -->
+            <!-- Dynamic Hospital Logo & Badge -->
             <div id="hospital-logo-container">
-                <div class="hosp-logo-icon gch" id="hospital-logo-icon">GCH</div>
+                <div class="hosp-logo-icon" id="hospital-logo-icon" style="background: linear-gradient(135deg, #1d4ed8, #0ea5e9);">GCH</div>
                 <div class="hosp-logo-text">
                     <div class="hosp-name" id="hospital-indicator-name">Global City Hospital</div>
-                    <div class="hosp-tag">HPRS Partner Institution</div>
+                    <div class="hosp-tag" id="hospital-indicator-tag">Tertiary Multispeciality Network Institution</div>
                 </div>
             </div>
 
             <h3 class="brand-font text-white mb-1">HPRS Network</h3>
-            <p class="text-white-50 small mb-2">Patient Record System &amp; Cross-Hospital Cloud Sync</p>
+            <p class="text-white-50 small mb-2">Hospital Patient Record System &amp; Cloud Network Sync</p>
 
             <!-- Cloud Sync Status Badge -->
             <div class="mb-3">
@@ -77,37 +99,45 @@
 
             <div id="login-alert" class="alert alert-danger py-2 small d-none" role="alert"></div>
 
-            <!-- Hospital Dropdown with Search -->
+            <!-- 1. Hospital Dropdown (All 10 Network Hospitals) -->
             <div class="mb-3 text-start">
-                <label class="form-label text-white-50 small"><i class="bi bi-building me-1"></i>Select Hospital</label>
-                <div class="hospital-search-wrapper" style="position:relative;">
-                    <input type="text" id="hospital-search-input" class="form-control" 
-                           placeholder="🔍 Search hospital..." 
-                           autocomplete="off"
-                           style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:10px;font-size:0.85rem;padding:8px 12px;"
-                           onfocus="document.getElementById('hospital-dropdown-list').classList.remove('d-none')"
-                           oninput="filterHospitals(this.value)">
-                    <input type="hidden" id="hospital-select" value="gch">
-                    <div id="hospital-dropdown-list" class="d-none" style="position:absolute;top:100%;left:0;right:0;z-index:9999;border-radius:10px;overflow:hidden;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
-                        <div class="hospital-option" data-value="gch" onclick="selectHospital('gch', '🏥 Global City Hospital (GCH)')"
-                             style="padding:10px 14px;cursor:pointer;background:rgba(30,41,59,0.95);color:white;font-size:0.85rem;border-bottom:1px solid rgba(255,255,255,0.1);">
-                            🏥 Global City Hospital (GCH)
-                        </div>
-                        <div class="hospital-option" data-value="mch" onclick="selectHospital('mch', '🏥 Municipal City Hospital (MCH)')"
-                             style="padding:10px 14px;cursor:pointer;background:rgba(30,41,59,0.95);color:white;font-size:0.85rem;">
-                            🏥 Municipal City Hospital (MCH)
-                        </div>
-                    </div>
+                <label class="form-label text-white-50 small fw-semibold">
+                    <i class="bi bi-hospital me-1 text-primary"></i>Select Hospital (10 Network Hospitals)
+                </label>
+                <select id="hospital-select" class="form-select custom-dark-select" onchange="onHospitalChange(this.value)">
+                    <option value="1">🏥 1. Global City Hospital (GCH)</option>
+                    <option value="2">🏥 2. Municipal City Hospital (MCH)</option>
+                    <option value="3">🏥 3. Sunrise Medical Center (SMC)</option>
+                    <option value="4">🏥 4. Apollo Speciality Hospital (ASH)</option>
+                    <option value="5">🏥 5. City Heart Institute (CHI)</option>
+                    <option value="6">🏥 6. Greenview Community Hospital (GVCH)</option>
+                    <option value="7">🏥 7. St. Thomas General Hospital (STGH)</option>
+                    <option value="8">🏥 8. National Cancer Centre (NCC)</option>
+                    <option value="9">🏥 9. LifeCare Maternity Hospital (LMH)</option>
+                    <option value="10">🏥 10. Metro Spine &amp; Brain Hospital (MSBH)</option>
+                </select>
+            </div>
+
+            <!-- 2. Staff Account Dropdown (Auto-fills Email & Password) -->
+            <div class="mb-3 text-start">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label text-white-50 small fw-semibold mb-0">
+                        <i class="bi bi-person-badge me-1 text-info"></i>Staff Account (Quick Auto-Fill)
+                    </label>
+                    <span class="badge bg-secondary-subtle text-white-50" style="font-size:0.65rem;">Auto-fills login</span>
                 </div>
+                <select id="staff-select" class="form-select custom-dark-select" onchange="onStaffSelect(this.value)">
+                    <!-- Populated dynamically based on chosen hospital -->
+                </select>
             </div>
 
             <!-- Login Form -->
             <form id="login-form" class="text-start">
                 <div class="mb-3">
-                    <label class="form-label text-white-50 small">Mail</label>
+                    <label class="form-label text-white-50 small">Email Address</label>
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-secondary text-white-50"><i class="bi bi-envelope"></i></span>
-                        <input type="email" id="email" class="form-control bg-transparent text-white border-secondary" placeholder="e.g. gch.dr.carter@hprs.com" required>
+                        <input type="email" id="email" class="form-control bg-transparent text-white border-secondary" placeholder="e.g. gch.admin@hprs.com" value="gch.admin@hprs.com" required>
                     </div>
                 </div>
 
@@ -115,14 +145,19 @@
                     <label class="form-label text-white-50 small">Password</label>
                     <div class="input-group">
                         <span class="input-group-text bg-transparent border-secondary text-white-50"><i class="bi bi-lock"></i></span>
-                        <input type="password" id="password" class="form-control bg-transparent text-white border-secondary" placeholder="••••••••" required>
+                        <input type="password" id="password" class="form-control bg-transparent text-white border-secondary" placeholder="••••••••" value="Password123!" required>
                     </div>
+                    <div class="form-text text-white-50" style="font-size:0.72rem;">Default demo password for all accounts: <code>Password123!</code></div>
                 </div>
 
-                <button type="submit" class="btn btn-primary-custom w-100 py-2.5">
+                <button type="submit" class="btn btn-primary-custom w-100 py-2.5 fw-semibold shadow-sm">
                     <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Platform
                 </button>
-                <div class="text-center mt-3"><a href="#" class="text-white-50 small" onclick="alert('Please contact your hospital system administrator to reset your password.'); return false;"><i class="bi bi-question-circle me-1"></i>Forgot Password?</a></div>
+                <div class="text-center mt-3">
+                    <a href="#" class="text-white-50 small" onclick="alert('Demo password is Password123! across all hospital staff accounts.'); return false;">
+                        <i class="bi bi-question-circle me-1"></i>Forgot Password?
+                    </a>
+                </div>
             </form>
 
         </div>
@@ -132,69 +167,176 @@
     <!-- Firebase Compat SDK (required for cross-device sync) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="js/cloud-storage.js"></script>
-    <script src="js/firebase-sync.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/cloud-storage.js?v=4.2.1"></script>
+    <script src="js/firebase-sync.js?v=4.2.1"></script>
+    <script src="js/api.js?v=4.2.1"></script>
+    <script src="js/auth.js?v=4.2.1"></script>
+    <script src="js/app.js?v=4.2.1"></script>
 
     <script>
-        // Hospital dropdown handler — swaps logo
-        function onHospitalChange(val) {
+        // ── 10 Hospitals Metadata (Badges, Gradients, Tags) ──
+        const hospitalMeta = {
+            1:  { code: 'GCH',  name: 'Global City Hospital',          grad: 'linear-gradient(135deg, #1d4ed8, #0ea5e9)', tag: 'Tertiary Multispeciality Network Institution' },
+            2:  { code: 'MCH',  name: 'Municipal City Hospital',        grad: 'linear-gradient(135deg, #047857, #14b8a6)', tag: 'Public Healthcare & Orthopedics Center' },
+            3:  { code: 'SMC',  name: 'Sunrise Medical Center',         grad: 'linear-gradient(135deg, #d97706, #f59e0b)', tag: 'Internal Medicine & Pulmonology Hub' },
+            4:  { code: 'ASH',  name: 'Apollo Speciality Hospital',     grad: 'linear-gradient(135deg, #7c3aed, #a855f7)', tag: 'Orthopedic Surgery & Rheumatology Hub' },
+            5:  { code: 'CHI',  name: 'City Heart Institute',           grad: 'linear-gradient(135deg, #dc2626, #f43f5e)', tag: 'Cardiac Surgery & Electrophysiology' },
+            6:  { code: 'GVCH', name: 'Greenview Community Hospital',   grad: 'linear-gradient(135deg, #16a34a, #4ade80)', tag: 'Family Medicine & OB-GYN Care' },
+            7:  { code: 'STGH', name: 'St. Thomas General Hospital',    grad: 'linear-gradient(135deg, #0891b2, #38bdf8)', tag: 'Emergency & Trauma Care Network' },
+            8:  { code: 'NCC',  name: 'National Cancer Centre',         grad: 'linear-gradient(135deg, #be185d, #ec4899)', tag: 'Comprehensive Oncology & Research Park' },
+            9:  { code: 'LMH',  name: 'LifeCare Maternity Hospital',    grad: 'linear-gradient(135deg, #db2777, #f472b6)', tag: 'Maternal-Fetal Care & Neonatology' },
+            10: { code: 'MSBH', name: 'Metro Spine & Brain Hospital',   grad: 'linear-gradient(135deg, #0f766e, #2dd4bf)', tag: 'Neurosurgery & Spine Rehabilitation' }
+        };
+
+        // ── 10 Hospitals Staff Accounts ──
+        const hospitalStaff = {
+            1: [
+                { role: 'ADMIN',        label: '👑 Administrator — Global City Administrator', email: 'gch.admin@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 1 — Dr. Emily Carter (Cardiology)',   email: 'gch.dr.carter@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 2 — Dr. Rajesh Sharma (Neurology)',   email: 'gch.dr.sharma@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 3 — Dr. Priya Raman (General Med)',   email: 'gch.dr.3@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 4 — Dr. Marcus Brody (Pulmonology)',  email: 'gch.dr.4@hprs.com' },
+                { role: 'NURSE',        label: '💉 Nurse — Nurse Sarah Jenkins',                email: 'gch.nurse.sarah@hprs.com' },
+                { role: 'RECEPTIONIST', label: '📋 Receptionist — Mark Jenkins',                email: 'gch.reception@hprs.com' }
+            ],
+            2: [
+                { role: 'ADMIN',        label: '👑 Administrator — Municipal City Administrator', email: 'mch.admin@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 1 — Dr. James Rivera (Orthopedics)',     email: 'mch.dr.rivera@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 2 — Dr. Anita Patel (General Med)',      email: 'mch.dr.patel@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 3 — Dr. Sarah O\'Connor (Pediatrics)',   email: 'mch.dr.3@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 4 — Dr. Tariq Mansoor (Dermatology)',    email: 'mch.dr.4@hprs.com' },
+                { role: 'NURSE',        label: '💉 Nurse — Nurse Priya Nair',                      email: 'mch.nurse.priya@hprs.com' },
+                { role: 'RECEPTIONIST', label: '📋 Receptionist — Rachel Green',                   email: 'mch.reception@hprs.com' }
+            ],
+            3: [
+                { role: 'ADMIN',        label: '👑 Administrator — SMC Administrator',             email: 'smc.admin@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 1 — Dr. Victor Nguyen (Internal Med)',   email: 'smc.dr.1@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 2 — Dr. Aisha Okafor (Pulmonology)',     email: 'smc.dr.2@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 3 — Dr. Liam Hoffmann (General Surgery)',email: 'smc.dr.3@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 4 — Dr. Preethi Subramaniam (Dermatology)', email: 'smc.dr.4@hprs.com' },
+                { role: 'NURSE',        label: '💉 Nurse — Nurse Bethany Cole',                    email: 'smc.nurse@hprs.com' },
+                { role: 'RECEPTIONIST', label: '📋 Receptionist — Owen Fletcher',                  email: 'smc.reception@hprs.com' }
+            ],
+            4: [
+                { role: 'ADMIN',        label: '👑 Administrator — ASH Administrator',             email: 'ash.admin@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 1 — Dr. Suresh Pillai (Orthopedics)',    email: 'ash.dr.1@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 2 — Dr. Kavitha Reddy (Endocrinology)',  email: 'ash.dr.2@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 3 — Dr. Mohammed Al-Farsi (Rheumatology)', email: 'ash.dr.3@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 4 — Dr. Sandra Blackwell (Sports Med)',  email: 'ash.dr.4@hprs.com' },
+                { role: 'NURSE',        label: '💉 Nurse — Nurse Amara Diallo',                    email: 'ash.nurse@hprs.com' },
+                { role: 'RECEPTIONIST', label: '📋 Receptionist — Ciara Murphy',                   email: 'ash.reception@hprs.com' }
+            ],
+            5: [
+                { role: 'ADMIN',        label: '👑 Administrator — CHI Administrator',             email: 'chi.admin@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 1 — Dr. Aryan Kapoor (Interventional Cardio)', email: 'chi.dr.1@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 2 — Dr. Helena Vasquez (Cardiac Surgery)',     email: 'chi.dr.2@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 3 — Dr. Benjamin Osei (Echocardiography)',     email: 'chi.dr.3@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 4 — Dr. Naina Krishnaswamy (Electrophysiology)', email: 'chi.dr.4@hprs.com' },
+                { role: 'NURSE',        label: '💉 Nurse — Nurse Fiona Walsh',                     email: 'chi.nurse@hprs.com' },
+                { role: 'RECEPTIONIST', label: '📋 Receptionist — Tyler Evans',                    email: 'chi.reception@hprs.com' }
+            ],
+            6: [
+                { role: 'ADMIN',        label: '👑 Administrator — GVCH Administrator',            email: 'gvch.admin@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 1 — Dr. Laura Mwangi (General Practice)', email: 'gvch.dr.1@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 2 — Dr. Tariq Hassan (OB-GYN)',          email: 'gvch.dr.2@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 3 — Dr. Isabela Costa (Pediatrics)',     email: 'gvch.dr.3@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 4 — Dr. Patrick Lorne (Family Med)',     email: 'gvch.dr.4@hprs.com' },
+                { role: 'NURSE',        label: '💉 Nurse — Nurse Hannah Scott',                    email: 'gvch.nurse@hprs.com' },
+                { role: 'RECEPTIONIST', label: '📋 Receptionist — Declan Byrne',                   email: 'gvch.reception@hprs.com' }
+            ],
+            7: [
+                { role: 'ADMIN',        label: '👑 Administrator — STGH Administrator',            email: 'stgh.admin@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 1 — Dr. Jonathan Reed (Emergency Med)',  email: 'stgh.dr.1@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 2 — Dr. Yuki Tanaka (General Surgery)',  email: 'stgh.dr.2@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 3 — Dr. Chidi Eze (Trauma Surgery)',     email: 'stgh.dr.3@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 4 — Dr. Alicia Monroe (Internal Med)',   email: 'stgh.dr.4@hprs.com' },
+                { role: 'NURSE',        label: '💉 Nurse — Nurse Karen Kelly',                     email: 'stgh.nurse@hprs.com' },
+                { role: 'RECEPTIONIST', label: '📋 Receptionist — Ethan Ross',                     email: 'stgh.reception@hprs.com' }
+            ],
+            8: [
+                { role: 'ADMIN',        label: '👑 Administrator — NCC Administrator',             email: 'ncc.admin@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 1 — Dr. Ramona Gheorghiu (Medical Oncology)', email: 'ncc.dr.1@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 2 — Dr. Sanjay Mehta (Radiation Oncology)',   email: 'ncc.dr.2@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 3 — Dr. Alice Brennan (Surgical Oncology)',   email: 'ncc.dr.3@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 4 — Dr. Kenji Watanabe (Hematology-Oncology)',email: 'ncc.dr.4@hprs.com' },
+                { role: 'NURSE',        label: '💉 Nurse — Nurse Ananya Bose',                     email: 'ncc.nurse@hprs.com' },
+                { role: 'RECEPTIONIST', label: '📋 Receptionist — Lucas Dupont',                   email: 'ncc.reception@hprs.com' }
+            ],
+            9: [
+                { role: 'ADMIN',        label: '👑 Administrator — LMH Administrator',             email: 'lmh.admin@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 1 — Dr. Priya Venkatesh (Obstetrics & Gyn)', email: 'lmh.dr.1@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 2 — Dr. Stella Obinna (Maternal-Fetal)',     email: 'lmh.dr.2@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 3 — Dr. Colm Gallagher (Neonatology)',       email: 'lmh.dr.3@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 4 — Dr. Rashida Okonkwo (Postnatal Care)',   email: 'lmh.dr.4@hprs.com' },
+                { role: 'NURSE',        label: '💉 Nurse — Nurse Maya Jensen',                     email: 'lmh.nurse@hprs.com' },
+                { role: 'RECEPTIONIST', label: '📋 Receptionist — Sophie Martin',                  email: 'lmh.reception@hprs.com' }
+            ],
+            10: [
+                { role: 'ADMIN',        label: '👑 Administrator — MSBH Administrator',            email: 'msbh.admin@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 1 — Dr. Ivan Petrov (Neurosurgery)',     email: 'msbh.dr.1@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 2 — Dr. Zara Hussain (Spine Surgery)',   email: 'msbh.dr.2@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 3 — Dr. Feng Li (Neurology)',            email: 'msbh.dr.3@hprs.com' },
+                { role: 'DOCTOR',       label: '🩺 Doctor 4 — Dr. Margaret O\'Brien (Neuro-Rehab)',email: 'msbh.dr.4@hprs.com' },
+                { role: 'NURSE',        label: '💉 Nurse — Nurse Sean Connelly',                   email: 'msbh.nurse@hprs.com' },
+                { role: 'RECEPTIONIST', label: '📋 Receptionist — Aaliyah Mansour',                email: 'msbh.reception@hprs.com' }
+            ]
+        };
+
+        // When a user selects a hospital from the dropdown
+        function onHospitalChange(hospId) {
+            hospId = parseInt(hospId) || 1;
+            const meta = hospitalMeta[hospId] || hospitalMeta[1];
+
+            // 1. Update Logo & Branding
             const logoIcon = document.getElementById('hospital-logo-icon');
             const logoName = document.getElementById('hospital-indicator-name');
+            const logoTag  = document.getElementById('hospital-indicator-tag');
 
-            if (val === 'mch') {
-                logoIcon.className = 'hosp-logo-icon mch';
-                logoIcon.textContent = 'MCH';
-                logoName.textContent = 'Municipal City Hospital';
-            } else {
-                logoIcon.className = 'hosp-logo-icon gch';
-                logoIcon.textContent = 'GCH';
-                logoName.textContent = 'Global City Hospital';
+            if (logoIcon) {
+                logoIcon.textContent = meta.code;
+                logoIcon.style.background = meta.grad;
+            }
+            if (logoName) logoName.textContent = meta.name;
+            if (logoTag)  logoTag.textContent  = meta.tag;
+
+            // 2. Populate Staff Account Dropdown
+            const staffSelect = document.getElementById('staff-select');
+            const staffList = hospitalStaff[hospId] || hospitalStaff[1];
+
+            if (staffSelect) {
+                staffSelect.innerHTML = staffList.map(s => 
+                    `<option value="${s.email}">${s.label}</option>`
+                ).join('');
+
+                // Auto-fill first account (Administrator) by default
+                if (staffList.length > 0) {
+                    onStaffSelect(staffList[0].email);
+                }
             }
         }
 
-        function filterHospitals(query) {
-            const opts = document.querySelectorAll('.hospital-option');
-            const q = query.toLowerCase();
-            let anyVisible = false;
-            opts.forEach(opt => {
-                const matches = opt.textContent.toLowerCase().includes(q);
-                opt.style.display = matches ? 'block' : 'none';
-                if (matches) anyVisible = true;
-            });
-            document.getElementById('hospital-dropdown-list').classList.toggle('d-none', !anyVisible);
+        // When a staff account is selected
+        function onStaffSelect(email) {
+            const emailInput = document.getElementById('email');
+            const passInput  = document.getElementById('password');
+            if (emailInput) emailInput.value = email;
+            if (passInput)  passInput.value  = 'Password123!';
         }
 
-        function selectHospital(val, label) {
-            document.getElementById('hospital-search-input').value = label;
-            document.getElementById('hospital-select').value = val;
-            document.getElementById('hospital-dropdown-list').classList.add('d-none');
-            onHospitalChange(val);
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.hospital-search-wrapper')) {
-                document.getElementById('hospital-dropdown-list').classList.add('d-none');
-            }
-        });
-
-        // Show cloud sync status badge after scripts initialise
+        // Initialize on DOM load
         document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('hospital-search-input').value = '🏥 Global City Hospital (GCH)';
+            onHospitalChange(1);
 
             const badge = document.getElementById('sync-status-badge');
             setTimeout(function () {
                 if (typeof FirebaseSync !== 'undefined' && FirebaseSync.isReady) {
                     badge.className = 'sync-badge live';
-                    badge.innerHTML = '<i class="bi bi-cloud-check-fill"></i> Cloud Sync Active — Cross-hospital data live';
+                    badge.innerHTML = '<i class="bi bi-cloud-check-fill"></i> Cloud Sync Active — 10 Hospitals Live';
                 } else {
                     badge.className = 'sync-badge local';
-                    badge.innerHTML = '<i class="bi bi-hdd-fill"></i> Local Mode — Configure Firebase for cross-hospital sync';
+                    badge.innerHTML = '<i class="bi bi-hdd-fill"></i> Local Mode — 10 Hospitals Loaded';
                 }
-            }, 2500);
+            }, 1500);
         });
     </script>
 </body>
